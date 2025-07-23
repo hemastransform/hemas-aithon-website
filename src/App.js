@@ -16,9 +16,9 @@ const techPillars = [
 ];
 
 const whyJoinData = [
-    { title: "Build What Matters", description: "Move beyond theory. Tackle real-world challenges from Hemas's Healthcare, Consumer, and Mobility sectors. Your code could become a high-potential prototype that shapes the future of our business.", size: "large" },
-    { title: "Launch Your Career", description: "This is more than a competition—it's a talent pipeline. Impress us, and you'll be on the fast track for internships and recruitment into Hemas's most critical tech roles.", size: "small" },
-    { title: "Wield Cutting-Edge Tech", description: "Get hands-on with the tools that are defining the future. From Generative AI and agentic systems to IoT and AR/VR, you'll be working at the frontier of technology.", size: "small" },
+    { title: "Build What Matters", description: "Tackle real-world challenges from Hemas's Healthcare, Consumer, and Mobility sectors. Your code could become a high-potential prototype that shapes our future.", size: "large" },
+    { title: "Launch Your Career", description: "This is a direct talent pipeline. Impress us, and you'll be on the fast track for internships and recruitment into Hemas's most critical tech roles.", size: "small" },
+    { title: "Wield Cutting-Edge Tech", description: "Get hands-on with the tools defining the future—Generative AI, agentic systems, IoT, and AR/VR, all backed by the power of Microsoft Azure.", size: "small" },
 ];
 
 const scheduleData = [
@@ -48,41 +48,164 @@ const AnimatedText = ({ text, className, delay = 0 }) => {
     );
 };
 
-const useMousePosition = () => {
-  const [mousePosition, setMousePosition] = useState({ x: null, y: null });
+const ParticleBackground = () => {
+    const canvasRef = useRef(null);
+    const mouse = useRef({ x: undefined, y: undefined, radius: 150 });
 
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = document.body.scrollHeight; // Set height to full scroll height
+
+        let particlesArray = [];
+
+        const handleMouseMove = (event) => {
+            mouse.current.x = event.clientX;
+            mouse.current.y = event.clientY + window.scrollY;
+        };
+        window.addEventListener('mousemove', handleMouseMove);
+
+        class Particle {
+            constructor(x, y, directionX, directionY, size, color) {
+                this.x = x;
+                this.y = y;
+                this.directionX = directionX;
+                this.directionY = directionY;
+                this.size = size;
+                this.color = color;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+            update() {
+                if (this.x > canvas.width || this.x < 0) this.directionX = -this.directionX;
+                if (this.y > canvas.height || this.y < 0) this.directionY = -this.directionY;
+                
+                if (mouse.current.x !== undefined && mouse.current.y !== undefined) {
+                    let dx = mouse.current.x - this.x;
+                    let dy = mouse.current.y - this.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < mouse.current.radius) {
+                        if (this.x < mouse.current.x && this.x > 0) this.x -= 1;
+                        if (this.x > mouse.current.x && this.x < canvas.width) this.x += 1;
+                        if (this.y < mouse.current.y && this.y > 0) this.y -= 1;
+                        if (this.y > mouse.current.y && this.y < canvas.height) this.y += 1;
+                    }
+                }
+
+                this.x += this.directionX;
+                this.y += this.directionY;
+                this.draw();
+            }
+        }
+
+        function init() {
+            particlesArray = [];
+            let numberOfParticles = (canvas.height * canvas.width) / 12000;
+            for (let i = 0; i < numberOfParticles; i++) {
+                let size = (Math.random() * 1.5) + 1;
+                let x = Math.random() * canvas.width;
+                let y = Math.random() * canvas.height;
+                let directionX = (Math.random() * .4) - .2;
+                let directionY = (Math.random() * .4) - .2;
+                let color = 'rgba(20, 209, 190, 0.6)';
+                particlesArray.push(new Particle(x, y, directionX, directionY, size, color));
+            }
+        }
+
+        function connect() {
+            let opacityValue = 1;
+            for (let a = 0; a < particlesArray.length; a++) {
+                for (let b = a; b < particlesArray.length; b++) {
+                    let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x))
+                                 + ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
+                    if (distance < (canvas.width / 8) * (canvas.height / 8)) {
+                        opacityValue = 1 - (distance / 20000);
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${opacityValue * 0.2})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                        ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        let animationFrameId;
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+            }
+            connect();
+            animationFrameId = requestAnimationFrame(animate);
+        }
+
+        const handleResize = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = document.body.scrollHeight;
+            init();
+        };
+        
+        // Use a timeout to ensure the body has rendered and scrollHeight is accurate
+        setTimeout(() => {
+            handleResize();
+        }, 100);
+
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('resize', handleResize);
+            cancelAnimationFrame(animationFrameId);
+        };
+    }, []);
+
+    return <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full z-0 opacity-50"></canvas>;
+};
+
+const useScrollReveal = () => {
   useEffect(() => {
-    const updateMousePosition = ev => {
-      setMousePosition({ x: ev.clientX, y: ev.clientY });
-    };
-    window.addEventListener('mousemove', updateMousePosition);
-    return () => {
-      window.removeEventListener('mousemove', updateMousePosition);
-    };
+    const revealElements = document.querySelectorAll('.scroll-reveal');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.2 });
+    revealElements.forEach(el => observer.observe(el));
+    return () => revealElements.forEach(el => observer.unobserve(el));
   }, []);
-
-  return mousePosition;
 };
 
 // --- Main App Component ---
 export default function App() {
   const refs = {
-    pillars: useRef(null),
-    about: useRef(null),
-    timeline: useRef(null),
-    faq: useRef(null),
-    register: useRef(null),
+    pillars: useRef(null), about: useRef(null), timeline: useRef(null),
+    faq: useRef(null), register: useRef(null),
   };
-
   const scrollTo = (event, id) => {
     event.preventDefault();
-    refs[id].current?.scrollIntoView({ behavior: 'smooth' });
+    if (refs[id] && refs[id].current) {
+        refs[id].current.scrollIntoView({ behavior: 'smooth' });
+    }
   };
-
   const registrationFormUrl = "https://www.cognitoforms.com/HemasTransformation1/HemasAIthonOfficialTeamRegistration";
-  const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(registrationFormUrl)}&bgcolor=0a101f&color=e2e8f0&qzone=1`;
-  
-  const { x, y } = useMousePosition();
+  const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(registrationFormUrl)}&bgcolor=111827&color=e2e8f0&qzone=1`;
+  useScrollReveal();
+
+  const [isScrolled, setIsScrolled] = useState(false);
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <>
@@ -102,29 +225,40 @@ export default function App() {
           position: relative;
           overflow: hidden;
         }
-        .glass-card .spotlight {
-          content: '';
-          position: absolute;
-          left: 0;
-          top: 0;
-          width: 100%;
-          height: 100%;
-          background: radial-gradient(circle at var(--x) var(--y), rgba(20, 209, 190, 0.25), transparent 40%);
-          opacity: 0;
-          transition: opacity 0.3s ease;
+        .glass-card:hover {
+          border-color: rgba(20, 209, 190, 0.5);
+          box-shadow: 0 0 20px rgba(20, 209, 190, 0.1);
         }
-        .glass-card:hover .spotlight { opacity: 1; }
         @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in-up { display: inline-block; opacity: 0; animation: fade-in-up 0.6s forwards; }
-        .scroll-reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
-        .scroll-reveal.visible { opacity: 1; transform: translateY(0); }
+        .scroll-reveal { opacity: 0; transform: translateY(30px) scale(0.98); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
+        .scroll-reveal.visible { opacity: 1; transform: translateY(0) scale(1); }
+        
+        @keyframes ripple { to { transform: scale(4); opacity: 0; } }
+        .ripple {
+          position: absolute;
+          border-radius: 50%;
+          transform: scale(0);
+          animation: ripple 600ms linear;
+          background-color: rgba(255, 255, 255, 0.7);
+        }
+        .button-glare {
+          position: absolute;
+          top: 0;
+          left: -150%;
+          width: 50%;
+          height: 100%;
+          background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
+          transform: skewX(-25deg);
+          transition: left 0.75s;
+        }
+        .group:hover .button-glare { left: 150%; }
       `}</style>
       <div style={{backgroundColor: '#0a101f', fontFamily: "'Poppins', sans-serif"}} className="text-slate-300 antialiased overflow-x-hidden">
+        <ParticleBackground />
         <div className="fixed top-0 left-0 w-full h-full aurora-bg z-0"></div>
-        <div className="fixed top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/hexellence.png')] opacity-[0.03] z-0"></div>
-        <div className="fixed top-0 left-0 w-screen h-screen pointer-events-none z-20" style={{ background: `radial-gradient(600px at ${x}px ${y}px, rgba(29, 78, 216, 0.15), transparent 80%)`}}></div>
         
-        <Header scrollTo={scrollTo} />
+        <Header scrollTo={scrollTo} isScrolled={isScrolled} />
 
         <main className="relative z-10">
           <Hero scrollTo={scrollTo} />
@@ -145,10 +279,23 @@ export default function App() {
 
 // --- Re-imagined Components ---
 
-function Header({ scrollTo }) {
+function Header({ scrollTo, isScrolled }) {
+  const createRipple = (event) => {
+    const button = event.currentTarget;
+    const circle = document.createElement("span");
+    const diameter = Math.max(button.clientWidth, button.clientHeight);
+    const radius = diameter / 2;
+    circle.style.width = circle.style.height = `${diameter}px`;
+    circle.style.left = `${event.clientX - button.getBoundingClientRect().left - radius}px`;
+    circle.style.top = `${event.clientY - button.getBoundingClientRect().top - radius}px`;
+    circle.classList.add("ripple");
+    const ripple = button.getElementsByClassName("ripple")[0];
+    if (ripple) { ripple.remove(); }
+    button.appendChild(circle);
+  };
   return (
-    <header className="bg-black/30 backdrop-blur-md sticky top-0 z-50 border-b border-slate-800">
-      <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'top-4' : ''}`}>
+      <nav className={`container mx-auto flex justify-between items-center transition-all duration-300 bg-black/30 backdrop-blur-md border border-slate-800 ${isScrolled ? 'rounded-full py-2 px-6 shadow-2xl shadow-teal-500/10' : 'py-4 px-6'}`}>
         <div className="text-2xl font-bold text-white">Hemas <span className="text-teal-400" style={{textShadow: '0 0 8px rgba(20, 209, 190, 0.7)'}}>AI-thon</span></div>
         <div className="hidden md:flex items-center space-x-8">
           <a href="#about" onClick={(e) => scrollTo(e, 'about')} className="text-slate-300 hover:text-teal-400 transition-colors duration-300 font-medium">About</a>
@@ -156,7 +303,8 @@ function Header({ scrollTo }) {
           <a href="#timeline" onClick={(e) => scrollTo(e, 'timeline')} className="text-slate-300 hover:text-teal-400 transition-colors duration-300 font-medium">Timeline</a>
           <a href="#faq" onClick={(e) => scrollTo(e, 'faq')} className="text-slate-300 hover:text-teal-400 transition-colors duration-300 font-medium">FAQ</a>
         </div>
-        <a href="#register" onClick={(e) => scrollTo(e, 'register')} className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-5 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg shadow-teal-500/20">
+        <a href="#register" onClick={(e) => { scrollTo(e, 'register'); createRipple(e); }} className="group relative overflow-hidden bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-5 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg shadow-teal-500/20">
+          <span className="button-glare"></span>
           Register Now
         </a>
       </nav>
@@ -166,7 +314,7 @@ function Header({ scrollTo }) {
 
 function Hero({ scrollTo }) {
   return (
-    <section className="relative text-white py-24 md:py-40">
+    <section className="relative text-white pt-48 pb-24 md:pt-64 md:pb-40">
       <div className="container mx-auto px-6 text-center relative z-10">
         <h1 className="text-5xl md:text-7xl font-extrabold leading-tight tracking-tight">
           <AnimatedText text="Code the Unimaginable." className="block bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400" />
@@ -175,8 +323,9 @@ function Hero({ scrollTo }) {
         <p className="mt-6 text-lg md:text-xl text-slate-300 max-w-3xl mx-auto animate-fade-in-up" style={{animationDelay: '1s'}}>
           The Hemas AI-thon is not just a hackathon. It's a high-velocity launchpad for Sri Lanka's most ambitious student innovators. We provide the challenges, the tech, and the platform. You bring the vision.
         </p>
-        <div className="animate-fade-in-up" style={{animationDelay: '1.2s'}}>
-          <button onClick={(e) => scrollTo(e, 'register')} className="mt-12 bg-gradient-to-r from-teal-500 to-cyan-500 hover:shadow-2xl hover:shadow-teal-500/40 text-white font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-110 shadow-xl">
+        <div className="animate-fade-in-up flex justify-center" style={{animationDelay: '1.2s'}}>
+          <button onClick={(e) => scrollTo(e, 'register')} className="group relative overflow-hidden mt-12 bg-gradient-to-r from-teal-500 to-cyan-500 hover:shadow-2xl hover:shadow-teal-500/40 text-white font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-110 shadow-xl">
+            <span className="button-glare"></span>
             Apply to Join the Vanguard
           </button>
         </div>
@@ -190,15 +339,15 @@ function About() {
         <section className="py-20 bg-black/20">
             <div className="container mx-auto px-6">
                 <div className="text-center mb-16">
-                    <h2 className="text-4xl font-bold text-white">The Art of the Possible</h2>
-                    <p className="mt-4 text-lg text-slate-400 max-w-4xl mx-auto">We are strategically pivoting from a traditional hackathon to an innovative **"Discovery & Build"** framework. We immerse the brightest university talent in the world of Hemas—our businesses and strategic ambitions. Then, we challenge you to identify unique opportunities and design your own AI solutions, ensuring projects are not only technically brilliant but also rooted in genuine business insight.</p>
+                    <h2 className="text-4xl font-bold text-white scroll-reveal">The Art of the Possible</h2>
+                    <p className="mt-4 text-lg text-slate-400 max-w-4xl mx-auto scroll-reveal" style={{transitionDelay: '200ms'}}>We are strategically pivoting from a traditional hackathon to an innovative **"Discovery & Build"** framework. We immerse the brightest university talent in the world of Hemas—our businesses and strategic ambitions. Then, we challenge you to identify unique opportunities and design your own AI solutions, ensuring projects are not only technically brilliant but also rooted in genuine business insight.</p>
                 </div>
                 <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-                    <div className="glass-card rounded-2xl p-8 text-center">
+                    <div className="glass-card rounded-2xl p-8 text-center scroll-reveal" style={{transitionDelay: '300ms'}}>
                         <h3 className="text-2xl font-bold text-teal-400 mb-4">Structured Freedom</h3>
                         <p className="text-slate-300">Our core philosophy is to provide a 'scaffolding' that guides your creativity towards areas of high business value, while giving you complete freedom to build what you envision within that structure.</p>
                     </div>
-                    <div className="glass-card rounded-2xl p-8 text-center">
+                    <div className="glass-card rounded-2xl p-8 text-center scroll-reveal" style={{transitionDelay: '400ms'}}>
                         <h3 className="text-2xl font-bold text-orange-400 mb-4">Vision-First, Not Pain-Point First</h3>
                         <p className="text-slate-300">You won't be solving small, isolated problems. You'll be tackling strategic challenges derived from the future ambitions of our business units, making your work truly impactful.</p>
                     </div>
@@ -209,24 +358,55 @@ function About() {
 }
 
 function WhyJoin() {
-    return (
-        <section className="py-20">
-            <div className="container mx-auto px-6">
-                <div className="text-center mb-16">
-                    <h2 className="text-4xl font-bold text-white">This is Your Gateway.</h2>
-                    <p className="mt-4 text-lg text-slate-400">Why this is the only tech event that matters for your career this year.</p>
-                </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {whyJoinData.map((item, index) => (
-                        <div key={index} className={`glass-card rounded-2xl p-8 text-left ${item.size === 'large' ? 'lg:col-span-2' : ''}`}>
-                            <h3 className="text-2xl font-bold text-teal-400 mb-4">{item.title}</h3>
-                            <p className="text-slate-300 text-lg">{item.description}</p>
-                        </div>
-                    ))}
-                </div>
+  return (
+    <section className="py-20">
+      <div className="container mx-auto px-6">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-white scroll-reveal">This is Your Gateway.</h2>
+          <p className="mt-4 text-lg text-slate-400 scroll-reveal" style={{transitionDelay: '200ms'}}>Why this is the only tech event that matters for your career this year.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {whyJoinData.map((item, index) => (
+            <div key={index} className={`glass-card rounded-2xl p-8 text-center flex flex-col justify-center items-center scroll-reveal`} style={{transitionDelay: `${300 + index * 100}ms`}}>
+              <div>
+                <h3 className="text-2xl font-bold text-teal-400 mb-4">{item.title}</h3>
+                <p className="text-slate-300 text-lg">{item.description}</p>
+              </div>
             </div>
-        </section>
-    );
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TiltCard({ children, className, style }) {
+  const ref = useRef(null);
+
+  const handleMouseMove = (e) => {
+    if (!ref.current) return;
+    const { left, top, width, height } = ref.current.getBoundingClientRect();
+    const x = (e.clientX - left) / width - 0.5;
+    const y = (e.clientY - top) / height - 0.5;
+    ref.current.style.transform = `perspective(1000px) rotateY(${x * 15}deg) rotateX(${-y * 15}deg) scale3d(1.05, 1.05, 1.05)`;
+  };
+
+  const handleMouseLeave = () => {
+    if (!ref.current) return;
+    ref.current.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg) scale3d(1, 1, 1)';
+  };
+
+  return (
+    <div
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className={`transition-transform duration-300 ease-out ${className}`}
+      style={style}
+    >
+      {children}
+    </div>
+  );
 }
 
 function TechPillars() {
@@ -234,17 +414,18 @@ function TechPillars() {
     <section className="py-20 bg-black/20">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-white">Explore the Technology Pillars</h2>
-          <p className="mt-4 text-lg text-slate-400">Your challenge is to build an innovative solution leveraging one or more of these core domains.</p>
+          <h2 className="text-4xl font-bold text-white scroll-reveal">Explore the Technology Pillars</h2>
+          <p className="mt-4 text-lg text-slate-400 scroll-reveal" style={{transitionDelay: '200ms'}}>Your challenge is to build an innovative solution leveraging one or more of these core domains.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {techPillars.map((pillar) => (
-            <div key={pillar.title} className={`glass-card rounded-2xl p-6 flex flex-col items-center text-center border-t-4 border-${pillar.color}-500`}>
-              <div className="spotlight"></div>
-              <div className={`text-${pillar.color}-400 mb-4`}>{pillar.icon}</div>
-              <h3 className="text-xl font-bold text-white mb-3">{pillar.title}</h3>
-              <p className="text-slate-400 text-sm flex-grow">{pillar.description}</p>
-            </div>
+          {techPillars.map((pillar, index) => (
+            <TiltCard key={pillar.title} className={`scroll-reveal`} style={{transitionDelay: `${300 + index * 100}ms`}}>
+              <div className={`glass-card h-full rounded-2xl p-6 flex flex-col items-center text-center border-t-4 border-${pillar.color}-500`}>
+                <div className={`text-${pillar.color}-400 mb-4`}>{pillar.icon}</div>
+                <h3 className="text-xl font-bold text-white mb-3">{pillar.title}</h3>
+                <p className="text-slate-400 text-sm flex-grow">{pillar.description}</p>
+              </div>
+            </TiltCard>
           ))}
         </div>
       </div>
@@ -256,17 +437,17 @@ function CompetitionTimeline() {
     return (
         <section className="py-20">
             <div className="container mx-auto px-6">
-                <h2 className="text-4xl font-bold text-center text-white mb-16">Competition Timeline</h2>
+                <h2 className="text-4xl font-bold text-center text-white mb-16 scroll-reveal">Competition Timeline</h2>
                 <div className="relative max-w-4xl mx-auto">
-                    <div className="absolute left-4 md:left-1/2 w-0.5 h-full bg-slate-700"></div>
+                    <div className="absolute left-4 md:left-1/2 w-0.5 h-full bg-slate-700 scroll-reveal"></div>
                     {scheduleData.map((item, index) => (
-                        <div key={index} className="relative mb-12 flex items-center w-full">
+                        <div key={index} className="relative mb-12 flex items-center w-full scroll-reveal" style={{transitionDelay: `${200 + index * 100}ms`}}>
                             <div className={`hidden md:block w-1/2 ${index % 2 === 0 ? 'pr-8 text-right' : 'pl-8 text-left'}`}>
                                 {index % 2 === 0 && ( <> <h3 className="text-xl font-bold text-white">{item.title}</h3> <p className="text-orange-400">{item.date}</p> <p className="text-slate-400 mt-2 text-sm">{item.description}</p> </> )}
                             </div>
                             <div className="absolute left-4 md:left-1/2 transform -translate-x-1/2 w-8 h-8 bg-teal-500 rounded-full border-4 border-gray-900 flex items-center justify-center font-bold text-white z-10"> {index + 1} </div>
                             <div className={`w-full md:w-1/2 pl-12 md:pl-0 ${index % 2 !== 0 ? 'md:pr-8 md:text-right' : 'md:pl-8 md:text-left'}`}>
-                                <div className="md:hidden mb-2"> <h3 className="text-xl font-bold text-white">{item.title}</h3> <p className="text-orange-400">{item.date}</p> </div>
+                                <div className="md:hidden mb-2"> <h3 className="text-xl font-bold text-white">{item.title}</h3> <p className="text-orange-400">{item.date}</p></div>
                                 <p className="text-slate-400 mt-2 text-sm md:hidden">{item.description}</p>
                                 {index % 2 !== 0 && ( <div className="hidden md:block"> <h3 className="text-xl font-bold text-white">{item.title}</h3> <p className="text-orange-400">{item.date}</p> <p className="text-slate-400 mt-2 text-sm">{item.description}</p> </div> )}
                             </div>
@@ -277,17 +458,16 @@ function CompetitionTimeline() {
         </section>
     );
 }
-
 function Prizes() {
   return (
     <section id="prizes" className="py-20 bg-black/20">
       <div className="container mx-auto px-6 text-center">
-        <h2 className="text-4xl font-bold text-white mb-4">The Rewards for Visionaries</h2>
-        <p className="text-center text-slate-400 mb-12 max-w-3xl mx-auto">We're rewarding groundbreaking ideas and flawless execution with a significant prize pool and unparalleled opportunities.</p>
+        <h2 className="text-4xl font-bold text-white mb-4 scroll-reveal">The Rewards for Visionaries</h2>
+        <p className="text-center text-slate-400 mb-12 max-w-3xl mx-auto scroll-reveal" style={{transitionDelay: '200ms'}}>We're rewarding groundbreaking ideas and flawless execution with a significant prize pool and unparalleled opportunities.</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-            <div className="glass-card rounded-2xl p-8"> <p className="text-orange-400 font-bold text-lg">RUNNER-UP</p> <h3 className="text-4xl font-bold text-white mt-2">LKR 100,000</h3> </div>
-            <div className="glass-card rounded-2xl p-8 border-2 border-teal-400 shadow-2xl shadow-teal-500/20 transform scale-105"> <p className="text-teal-400 font-bold text-lg">GRAND PRIZE</p> <h3 className="text-5xl font-extrabold text-white mt-2">LKR 200,000</h3> <p className="text-slate-300 mt-1">AI-thon Champions</p> </div>
-            <div className="glass-card rounded-2xl p-8"> <p className="text-orange-400 font-bold text-lg">SPECIAL AWARD</p> <h3 className="text-4xl font-bold text-white mt-2">LKR 200,000</h3> <p className="text-slate-300 mt-1">Most Innovative Prototype</p> </div>
+            <div className="glass-card rounded-2xl p-8 scroll-reveal" style={{transitionDelay: '300ms'}}> <p className="text-orange-400 font-bold text-lg">RUNNER-UP</p> <h3 className="text-4xl font-bold text-white mt-2">LKR 100,000</h3> </div>
+            <div className="glass-card rounded-2xl p-8 border-2 border-teal-400 shadow-2xl shadow-teal-500/20 transform md:scale-105 scroll-reveal" style={{transitionDelay: '400ms'}}> <p className="text-teal-400 font-bold text-lg">GRAND PRIZE</p> <h3 className="text-5xl font-extrabold text-white mt-2">LKR 200,000</h3> <p className="text-slate-300 mt-1">AI-thon Champions</p> </div>
+            <div className="glass-card rounded-2xl p-8 scroll-reveal" style={{transitionDelay: '500ms'}}> <p className="text-orange-400 font-bold text-lg">SPECIAL AWARD</p> <h3 className="text-4xl font-bold text-white mt-2">LKR 200,000</h3> <p className="text-slate-300 mt-1">Most Innovative Prototype</p> </div>
         </div>
       </div>
     </section>
@@ -315,8 +495,8 @@ function FAQ() {
   return (
     <section className="py-20">
       <div className="container mx-auto px-6">
-        <h2 className="text-4xl font-bold text-center text-white mb-12">Your Questions, Answered.</h2>
-        <div className="max-w-3xl mx-auto p-4 rounded-lg glass-card">
+        <h2 className="text-4xl font-bold text-center text-white mb-12 scroll-reveal">Your Questions, Answered.</h2>
+        <div className="max-w-3xl mx-auto p-4 rounded-lg glass-card scroll-reveal" style={{transitionDelay: '200ms'}}>
           {faqData.map((item, index) => ( <FaqItem key={index} item={item} /> ))}
         </div>
       </div>
@@ -328,7 +508,7 @@ const Registration = React.forwardRef(({ qrCodeUrl, formUrl }, ref) => {
     return (
         <section id="register" ref={ref} className="py-24">
             <div className="container mx-auto px-6">
-                <div className="glass-card rounded-2xl p-8 md:p-12 max-w-4xl mx-auto">
+                <div className="glass-card rounded-2xl p-8 md:p-12 max-w-4xl mx-auto scroll-reveal">
                     <div className="grid md:grid-cols-2 gap-8 items-center">
                         <div>
                             <h2 className="text-4xl font-bold text-white">Your Mission Starts Now.</h2>
