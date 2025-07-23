@@ -225,7 +225,7 @@ function FAQ() {
 
 function Registration() {
     // ** Link updated with the one you provided **
-    const registrationFormUrl = "https://forms.office.com/Pages/ResponsePage.aspx?id=AtcqC_7EGUOpT0wB8yHV58IWbFpHfXxCuH2dMg4-Jl1UNEtIMUgwMTVUQkEwTExINjBJUkhIS1BGUC4u";
+    const registrationFormUrl = "https://www.cognitoforms.com/HemasTransformation1/HemasAIthonOfficialTeamRegistration";
 
     return (
         <section id="register" className="py-20 bg-gray-900">
