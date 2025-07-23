@@ -1,15 +1,29 @@
 import React, { useState, useRef } from 'react';
 
+// --- Helper Data & Components ---
+
 // Icon components for better visuals.
-const IconTrophy = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>;
 const IconLightbulb = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 9 6c0 1.3.5 2.6 1.5 3.5.7.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>;
 const IconExternalLink = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>;
 
+
 const faqData = [
-  { question: "What is the 'Discovery & Build' framework?", answer: "Instead of giving you a pre-defined problem, we immerse you in our business challenges. You get the 'structured freedom' to discover an opportunity and design your own AI agent-based solution, making your project highly relevant and innovative." },
-  { question: "What is the team size?", answer: "Teams can have up to 5 members. You must register as a team. The registration form will require the name and NIC for each member." },
-  { question: "What is the 'Agent Blueprint' challenge?", answer: "After the Immersion Day, you will have one week to submit a structured, one-page proposal for the AI agent you plan to build. The top 6 blueprints will be selected to compete in the final 24-hour hackathon." },
-  { question: "What is the primary tech stack?", answer: "Our primary cloud environment is Microsoft Azure. We encourage solutions using Python. Experience with AI frameworks like LangChain and AutoGen is a plus. You'll receive a full tech brief in the 'Digital Briefing Pack'." },
+  {
+    question: "What is the 'Discovery & Build' framework?",
+    answer: "Instead of giving you a pre-defined problem, we immerse you in our business challenges. You get the 'structured freedom' to discover an opportunity and design your own AI agent-based solution, making your project highly relevant and innovative.",
+  },
+  {
+    question: "What is the team size?",
+    answer: "Teams can have up to 5 members. You must register as a team. The registration form will require the name and NIC for each member.",
+  },
+  {
+    question: "What is the 'Agent Blueprint' challenge?",
+    answer: "After the Immersion Day, you will have one week to submit a structured, one-page proposal for the AI agent you plan to build. The top 6 blueprints will be selected to compete in the final 24-hour hackathon.",
+  },
+  {
+    question: "What is the primary tech stack?",
+    answer: "Our primary cloud environment is Microsoft Azure. We encourage solutions using Python. Experience with AI frameworks like LangChain and AutoGen is a plus. You'll receive a full tech brief in the 'Digital Briefing Pack'.",
+  },
 ];
 
 const scheduleData = [
@@ -18,6 +32,8 @@ const scheduleData = [
     { phase: "Phase 3", date: "Sep 8 - Sep 19", title: "Immersion & Ideation", description: "Selected participants join the online Immersion Day and then compete in the one-week 'Agent Blueprint' challenge." },
     { phase: "Phase 4", date: "Sep 22 - Oct 1", title: "The AI-thon Finale", description: "The top 6 teams are selected to build their prototypes in a final, 24-hour hackathon event, followed by judging and awards." },
 ];
+
+// --- Main Components ---
 
 function Header({ scrollTo }) {
   return (
@@ -135,17 +151,35 @@ function Schedule() {
             <div className="container mx-auto px-6">
                 <h2 className="text-3xl font-bold text-center text-white mb-12">Competition Timeline</h2>
                 <div className="relative max-w-4xl mx-auto">
+                    {/* Vertical line */}
                     <div className="absolute left-4 md:left-1/2 w-0.5 h-full bg-gray-700"></div>
                     {scheduleData.map((item, index) => (
                         <div key={index} className="relative mb-8 flex items-center w-full">
                             <div className={`hidden md:block w-1/2 ${index % 2 === 0 ? 'pr-8 text-right' : 'pl-8 text-left'}`}>
-                                {index % 2 === 0 && ( <> <h3 className="text-xl font-bold text-white">{item.title}</h3> <p className="text-orange-400">{item.date}</p> <p className="text-slate-400 mt-2 text-sm">{item.description}</p> </> )}
+                                {index % 2 === 0 && (
+                                    <>
+                                        <h3 className="text-xl font-bold text-white">{item.title}</h3>
+                                        <p className="text-orange-400">{item.date}</p>
+                                        <p className="text-slate-400 mt-2 text-sm">{item.description}</p>
+                                    </>
+                                )}
                             </div>
-                            <div className="absolute left-4 md:left-1/2 transform -translate-x-1/2 w-8 h-8 bg-teal-500 rounded-full border-4 border-gray-900 flex items-center justify-center font-bold text-white z-10"> {index + 1} </div>
+                            <div className="absolute left-4 md:left-1/2 transform -translate-x-1/2 w-8 h-8 bg-teal-500 rounded-full border-4 border-gray-900 flex items-center justify-center font-bold text-white z-10">
+                                {index + 1}
+                            </div>
                             <div className={`w-full md:w-1/2 pl-12 md:pl-0 ${index % 2 !== 0 ? 'md:pr-8 md:text-right' : 'md:pl-8 md:text-left'}`}>
-                                <div className="md:hidden mb-2"> <h3 className="text-xl font-bold text-white">{item.title}</h3> <p className="text-orange-400">{item.date}</p> </div>
+                                <div className="md:hidden mb-2">
+                                    <h3 className="text-xl font-bold text-white">{item.title}</h3>
+                                    <p className="text-orange-400">{item.date}</p>
+                                </div>
                                 <p className="text-slate-400 mt-2 text-sm md:hidden">{item.description}</p>
-                                {index % 2 !== 0 && ( <div className="hidden md:block"> <h3 className="text-xl font-bold text-white">{item.title}</h3> <p className="text-orange-400">{item.date}</p> <p className="text-slate-400 mt-2 text-sm">{item.description}</p> </div> )}
+                                {index % 2 !== 0 && (
+                                     <div className="hidden md:block">
+                                        <h3 className="text-xl font-bold text-white">{item.title}</h3>
+                                        <p className="text-orange-400">{item.date}</p>
+                                        <p className="text-slate-400 mt-2 text-sm">{item.description}</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ))}
@@ -165,7 +199,11 @@ function FaqItem({ item }) {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="stroke-current text-teal-400"><path d="M6 9L12 15L18 9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"></path></svg>
         </span>
       </button>
-      {isOpen && ( <div className="pb-4 pr-8 text-gray-400"> {item.answer} </div> )}
+      {isOpen && (
+        <div className="pb-4 pr-8 text-gray-400">
+          {item.answer}
+        </div>
+      )}
     </div>
   );
 }
@@ -176,7 +214,9 @@ function FAQ() {
       <div className="container mx-auto px-6">
         <h2 className="text-3xl font-bold text-center text-white mb-12">Frequently Asked Questions</h2>
         <div className="max-w-3xl mx-auto p-4 rounded-lg" style={{background: 'rgba(20, 28, 48, 0.6)'}}>
-          {faqData.map((item, index) => ( <FaqItem key={index} item={item} /> ))}
+          {faqData.map((item, index) => (
+            <FaqItem key={index} item={item} />
+          ))}
         </div>
       </div>
     </section>
@@ -184,8 +224,7 @@ function FAQ() {
 }
 
 function Registration() {
-    // ** ACTION REQUIRED **
-    // Replace this placeholder URL with the actual link to your registration form.
+    // ** Link updated with the one you provided **
     const registrationFormUrl = "https://forms.office.com/Pages/ResponsePage.aspx?id=AtcqC_7EGUOpT0wB8yHV58IWbFpHfXxCuH2dMg4-Jl1UNEtIMUgwMTVUQkEwTExINjBJUkhIS1BGUC4u";
 
     return (
@@ -200,9 +239,16 @@ function Registration() {
                         </p>
                     </div>
                     <div className="p-8 rounded-lg shadow-2xl" style={{background: 'rgba(20, 28, 48, 0.6)', border: '1px solid rgba(255, 255, 255, 0.1)'}}>
-                        <a href={registrationFormUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center w-full md:w-auto py-4 px-8 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-teal-500 hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-transform transform hover:scale-105">
+                        <a
+                            href={registrationFormUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center w-full md:w-auto py-4 px-8 border border-transparent rounded-md shadow-sm text-lg font-medium text-white bg-teal-500 hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-transform transform hover:scale-105"
+                        >
                             Open Registration Form
-                            <span className="ml-3"> <IconExternalLink /> </span>
+                            <span className="ml-3">
+                                <IconExternalLink />
+                            </span>
                         </a>
                         <p className="text-sm text-gray-500 mt-4">You will be redirected to an external site to complete your registration.</p>
                     </div>
@@ -222,6 +268,7 @@ function Footer() {
     );
 }
 
+// --- Main App Component ---
 export default function App() {
   const refs = {
     about: useRef(null),
