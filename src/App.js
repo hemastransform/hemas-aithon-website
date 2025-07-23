@@ -1,13 +1,497 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 
-// --- Enhanced SVG Icon Components ---
+// --- BACKGROUND ANIMATION COMPONENTS (from Code 1) ---
+
+// Neural Network Animation Component
+const NeuralNetwork = () => {
+  const canvasRef = useRef(null);
+  const animationRef = useRef();
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    const nodes = [];
+    const connections = [];
+    const nodeCount = 80;
+
+    // Create nodes
+    for (let i = 0; i < nodeCount; i++) {
+      nodes.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: (Math.random() - 0.5) * 0.8,
+        energy: Math.random(),
+        pulsePhase: Math.random() * Math.PI * 2,
+        size: Math.random() * 3 + 1
+      });
+    }
+    // Create connections
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const dx = nodes[i].x - nodes[j].x;
+        const dy = nodes[i].y - nodes[j].y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < 150) {
+          connections.push({
+            nodeA: i,
+            nodeB: j,
+            strength: 1 - (distance / 150),
+            pulseOffset: Math.random() * Math.PI * 2
+          });
+        }
+      }
+    }
+    let time = 0;
+    const animate = () => {
+      ctx.fillStyle = 'rgba(10, 16, 31, 0.1)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      time += 0.02;
+      // Update and draw nodes
+      nodes.forEach((node, i) => {
+        node.x += node.vx;
+        node.y += node.vy;
+
+        if (node.x < 0 || node.x > canvas.width) node.vx *= -1;
+        if (node.y < 0 || node.y > canvas.height) node.vy *= -1;
+
+        node.x = Math.max(0, Math.min(canvas.width, node.x));
+        node.y = Math.max(0, Math.min(canvas.height, node.y));
+
+        node.energy = (Math.sin(time + node.pulsePhase) + 1) / 2;
+
+        const radius = node.size + node.energy * 2;
+        const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, radius * 2);
+        gradient.addColorStop(0, `rgba(20, 209, 190, ${0.8 * node.energy})`);
+        gradient.addColorStop(0.5, `rgba(100, 255, 220, ${0.4 * node.energy})`);
+        gradient.addColorStop(1, 'rgba(20, 209, 190, 0)');
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, radius * 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.9 * node.energy})`;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      // Draw connections
+      connections.forEach(conn => {
+        const nodeA = nodes[conn.nodeA];
+        const nodeB = nodes[conn.nodeB];
+
+        const dx = nodeB.x - nodeA.x;
+        const dy = nodeB.y - nodeA.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < 150) {
+          const opacity = conn.strength * (nodeA.energy + nodeB.energy) / 2;
+          const pulse = Math.sin(time * 2 + conn.pulseOffset) * 0.3 + 0.7;
+
+          const gradient = ctx.createLinearGradient(nodeA.x, nodeA.y, nodeB.x, nodeB.y);
+          gradient.addColorStop(0, `rgba(255, 118, 1, ${opacity * pulse})`);
+          gradient.addColorStop(0.5, `rgba(20, 209, 190, ${opacity * pulse * 1.2})`);
+          gradient.addColorStop(1, `rgba(255, 118, 1, ${opacity * pulse})`);
+
+          ctx.strokeStyle = gradient;
+          ctx.lineWidth = 1 + pulse;
+          ctx.beginPath();
+          ctx.moveTo(nodeA.x, nodeA.y);
+          ctx.lineTo(nodeB.x, nodeB.y);
+          ctx.stroke();
+
+          if (Math.random() < 0.003) {
+            const t = Math.random();
+            const packetX = nodeA.x + dx * t;
+            const packetY = nodeA.y + dy * t;
+
+            ctx.fillStyle = `rgba(100, 255, 220, ${opacity})`;
+            ctx.beginPath();
+            ctx.arc(packetX, packetY, 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      });
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    animate();
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full"
+      style={{ mixBlendMode: 'screen' }}
+    />
+  );
+};
+
+const CodeParticles = () => {
+  const canvasRef = useRef(null);
+  const animationRef = useRef();
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    const codeSymbols = ['0', '1', '{', '}', '<', '>', '/', '\\', '()', '[]', 'AI', 'ML', 'λ', 'Σ', '∞', '→', '⟨⟩', '∧', '∨'];
+    const particles = [];
+    for (let i = 0; i < 50; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5,
+        symbol: codeSymbols[Math.floor(Math.random() * codeSymbols.length)],
+        opacity: Math.random() * 0.7 + 0.3,
+        size: Math.random() * 12 + 8,
+        rotation: 0,
+        rotationSpeed: (Math.random() - 0.5) * 0.02,
+        glitchTime: 0,
+        originalSymbol: ''
+      });
+      particles[i].originalSymbol = particles[i].symbol;
+    }
+    let time = 0;
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      time += 0.016;
+      particles.forEach(particle => {
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+        particle.rotation += particle.rotationSpeed;
+        if (particle.x < -50) particle.x = canvas.width + 50;
+        if (particle.x > canvas.width + 50) particle.x = -50;
+        if (particle.y < -50) particle.y = canvas.height + 50;
+        if (particle.y > canvas.height + 50) particle.y = -50;
+        particle.glitchTime -= 0.016;
+        if (particle.glitchTime <= 0 && Math.random() < 0.002) {
+          particle.glitchTime = 0.5;
+          particle.symbol = codeSymbols[Math.floor(Math.random() * codeSymbols.length)];
+        }
+        if (particle.glitchTime <= 0) {
+          particle.symbol = particle.originalSymbol;
+        }
+        ctx.save();
+        ctx.translate(particle.x, particle.y);
+        ctx.rotate(particle.rotation);
+        ctx.shadowColor = particle.glitchTime > 0 ? '#ff7601' : '#14d1be';
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = particle.glitchTime > 0
+           ? `rgba(255, 118, 1, ${particle.opacity})`
+           : `rgba(20, 209, 190, ${particle.opacity})`;
+        ctx.font = `${particle.size}px 'Courier New', monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(particle.symbol, 0, 0);
+        ctx.restore();
+      });
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    animate();
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full"
+      style={{ opacity: 0.6 }}
+    />
+  );
+};
+
+const MatrixRain = () => {
+  const canvasRef = useRef(null);
+  const animationRef = useRef();
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = [];
+    for (let i = 0; i < columns; i++) {
+      drops[i] = Math.random() * canvas.height;
+    }
+    const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+    const draw = () => {
+      ctx.fillStyle = 'rgba(10, 16, 31, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.font = fontSize + 'px monospace';
+      for (let i = 0; i < drops.length; i++) {
+        const char = chars[Math.floor(Math.random() * chars.length)];
+        const opacity = 1 - (drops[i] / canvas.height);
+        ctx.fillStyle = `rgba(20, 209, 190, ${Math.max(0.1, opacity)})`;
+        ctx.fillText(char, i * fontSize, drops[i]);
+        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i] += fontSize;
+      }
+    };
+    const animate = () => {
+      draw();
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    animate();
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full"
+      style={{ opacity: 0.3 }}
+    />
+  );
+};
+
+const GeometricShapes = () => {
+  const canvasRef = useRef(null);
+  const animationRef = useRef();
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    const shapes = [];
+
+    for (let i = 0; i < 15; i++) {
+      shapes.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 100 + 50,
+        rotation: 0,
+        rotationSpeed: (Math.random() - 0.5) * 0.01,
+        type: Math.floor(Math.random() * 4),
+        opacity: Math.random() * 0.1 + 0.05,
+        pulse: Math.random() * Math.PI * 2
+      });
+    }
+    let time = 0;
+    const drawTriangle = (x, y, size, rotation) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotation);
+      ctx.beginPath();
+      ctx.moveTo(0, -size / 2);
+      ctx.lineTo(-size / 2, size / 2);
+      ctx.lineTo(size / 2, size / 2);
+      ctx.closePath();
+      ctx.restore();
+    };
+    const drawSquare = (x, y, size, rotation) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotation);
+      ctx.beginPath();
+      ctx.rect(-size / 2, -size / 2, size, size);
+      ctx.restore();
+    };
+    const drawHexagon = (x, y, size, rotation) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotation);
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (i * Math.PI) / 3;
+        const px = Math.cos(angle) * size / 2;
+        const py = Math.sin(angle) * size / 2;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.restore();
+    };
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      time += 0.016;
+      shapes.forEach(shape => {
+        shape.rotation += shape.rotationSpeed;
+        const pulseFactor = Math.sin(time + shape.pulse) * 0.3 + 1;
+        const currentSize = shape.size * pulseFactor;
+        const gradient = ctx.createRadialGradient(
+          shape.x, shape.y, 0,
+          shape.x, shape.y, currentSize
+        );
+        gradient.addColorStop(0, `rgba(20, 209, 190, ${shape.opacity})`);
+        gradient.addColorStop(0.7, `rgba(255, 118, 1, ${shape.opacity * 0.5})`);
+        gradient.addColorStop(1, 'rgba(20, 209, 190, 0)');
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 2;
+        switch (shape.type) {
+          case 0: drawTriangle(shape.x, shape.y, currentSize, shape.rotation); break;
+          case 1: drawSquare(shape.x, shape.y, currentSize, shape.rotation); break;
+          case 2: drawHexagon(shape.x, shape.y, currentSize, shape.rotation); break;
+          case 3: ctx.beginPath(); ctx.arc(shape.x, shape.y, currentSize / 2, 0, Math.PI * 2); break;
+          default: break;
+        }
+        ctx.stroke();
+      });
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    animate();
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full"
+      style={{ opacity: 0.4 }}
+    />
+  );
+};
+
+const EnergyWaves = () => {
+  const canvasRef = useRef(null);
+  const animationRef = useRef();
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    let time = 0;
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      time += 0.02;
+      for (let layer = 0; layer < 3; layer++) {
+        ctx.beginPath();
+        ctx.moveTo(0, canvas.height / 2);
+        for (let x = 0; x <= canvas.width; x += 5) {
+          const y = canvas.height / 2 +
+             Math.sin((x * 0.005) + time + (layer * 0.5)) * 30 +
+            Math.sin((x * 0.01) + time * 0.7 + (layer * 0.3)) * 15 +
+            Math.sin((x * 0.02) + time * 0.5 + (layer * 0.7)) * 8;
+          ctx.lineTo(x, y);
+        }
+        const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+        gradient.addColorStop(0, `rgba(20, 209, 190, ${0.1 - layer * 0.02})`);
+        gradient.addColorStop(0.5, `rgba(255, 118, 1, ${0.15 - layer * 0.03})`);
+        gradient.addColorStop(1, `rgba(20, 209, 190, ${0.1 - layer * 0.02})`);
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    animate();
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, []);
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full"
+      style={{ opacity: 0.5 }}
+    />
+  );
+};
+
+const FuturisticAiBackground = () => {
+  return (
+    <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-gray-900 to-black" />
+      <div
+        className="absolute inset-0 opacity-70"
+        style={{
+          background: `
+            radial-gradient(circle at 20% 80%, rgba(255, 118, 1, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(20, 209, 190, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(100, 255, 220, 0.05) 0%, transparent 50%)
+          `,
+          animation: 'gradientShift 20s ease-in-out infinite alternate'
+        }}
+      />
+      <MatrixRain />
+      <EnergyWaves />
+      <GeometricShapes />
+      <NeuralNetwork />
+      <CodeParticles />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(20, 209, 190, 0.02) 2px,
+            rgba(20, 209, 190, 0.02) 4px
+          )`,
+          animation: 'scanlines 2s linear infinite'
+        }}
+      />
+    </div>
+  );
+};
+
+
+// --- CONTENT COMPONENTS & DATA (from Code 2) ---
+
 const IconBrainCircuit = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8"><path d="M12 2a10 10 0 0 0-10 10c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.1-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.1.39-1.99 1.03-2.69a3.6 3.6 0 0 1 .1-2.64s.84-.27 2.75 1.02a9.58 9.58 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.4.1 2.64.64.7 1.03 1.6 1.03 2.69 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.73c0 .27.16.59.67.5A10 10 0 0 0 22 12 10 10 0 0 0 12 2Z"/></svg>;
 const IconAutomation = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8"><path d="M12 8V4H8"/><rect x="4" y="12" width="8" height="8" rx="1"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M17 12h-2"/><path d="M17 22v-4h-2"/><path d="M12 17H4"/><path d="M12 12v-2h4v-2h-4V4H8"/></svg>;
 const IconExperience = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>;
 const IconFoundation = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8"><path d="M12 20.5L4 16V8l8-4 8 4v8Z"/><path d="M4 8l8 4 8-4"/><path d="M12 12v8.5"/></svg>;
 const IconExternalLink = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>;
 
-// --- Data for the site ---
 const techPillars = [
     { icon: <IconBrainCircuit />, title: "Core Intelligence & Models", description: "Build with, fine-tune, or create LLMs/SLMs. Develop advanced computer vision solutions that see and understand the world.", color: "teal" },
     { icon: <IconAutomation />, title: "Systems & Automation", description: "Design autonomous AI agents and agentic workflows. Create digital twins to simulate and optimize real-world business processes.", color: "sky" },
@@ -35,7 +519,6 @@ const faqData = [
   { question: "What will I gain from participating?", answer: "You will tackle real-world business problems, get hands-on experience with cutting-edge tech, and get noticed by our senior leadership. This is a direct pathway for exceptional participants to our internship and recruitment programs." },
 ];
 
-// --- Helper & Animation Components ---
 const AnimatedText = ({ text, className, delay = 0 }) => {
     return (
         <span className={className}>
@@ -46,130 +529,6 @@ const AnimatedText = ({ text, className, delay = 0 }) => {
             ))}
         </span>
     );
-};
-
-const ParticleBackground = () => {
-    const canvasRef = useRef(null);
-    const mouse = useRef({ x: undefined, y: undefined, radius: 150 });
-
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = document.body.scrollHeight; // Set height to full scroll height
-
-        let particlesArray = [];
-
-        const handleMouseMove = (event) => {
-            mouse.current.x = event.clientX;
-            mouse.current.y = event.clientY + window.scrollY;
-        };
-        window.addEventListener('mousemove', handleMouseMove);
-
-        class Particle {
-            constructor(x, y, directionX, directionY, size, color) {
-                this.x = x;
-                this.y = y;
-                this.directionX = directionX;
-                this.directionY = directionY;
-                this.size = size;
-                this.color = color;
-            }
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
-                ctx.fillStyle = this.color;
-                ctx.fill();
-            }
-            update() {
-                if (this.x > canvas.width || this.x < 0) this.directionX = -this.directionX;
-                if (this.y > canvas.height || this.y < 0) this.directionY = -this.directionY;
-                
-                if (mouse.current.x !== undefined && mouse.current.y !== undefined) {
-                    let dx = mouse.current.x - this.x;
-                    let dy = mouse.current.y - this.y;
-                    let distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < mouse.current.radius) {
-                        if (this.x < mouse.current.x && this.x > 0) this.x -= 1;
-                        if (this.x > mouse.current.x && this.x < canvas.width) this.x += 1;
-                        if (this.y < mouse.current.y && this.y > 0) this.y -= 1;
-                        if (this.y > mouse.current.y && this.y < canvas.height) this.y += 1;
-                    }
-                }
-
-                this.x += this.directionX;
-                this.y += this.directionY;
-                this.draw();
-            }
-        }
-
-        function init() {
-            particlesArray = [];
-            let numberOfParticles = (canvas.height * canvas.width) / 12000;
-            for (let i = 0; i < numberOfParticles; i++) {
-                let size = (Math.random() * 1.5) + 1;
-                let x = Math.random() * canvas.width;
-                let y = Math.random() * canvas.height;
-                let directionX = (Math.random() * .4) - .2;
-                let directionY = (Math.random() * .4) - .2;
-                let color = 'rgba(20, 209, 190, 0.6)';
-                particlesArray.push(new Particle(x, y, directionX, directionY, size, color));
-            }
-        }
-
-        function connect() {
-            let opacityValue = 1;
-            for (let a = 0; a < particlesArray.length; a++) {
-                for (let b = a; b < particlesArray.length; b++) {
-                    let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x))
-                                 + ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
-                    if (distance < (canvas.width / 8) * (canvas.height / 8)) {
-                        opacityValue = 1 - (distance / 20000);
-                        ctx.strokeStyle = `rgba(255, 255, 255, ${opacityValue * 0.2})`;
-                        ctx.lineWidth = 1;
-                        ctx.beginPath();
-                        ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
-                        ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
-                        ctx.stroke();
-                    }
-                }
-            }
-        }
-
-        let animationFrameId;
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = 0; i < particlesArray.length; i++) {
-                particlesArray[i].update();
-            }
-            connect();
-            animationFrameId = requestAnimationFrame(animate);
-        }
-
-        const handleResize = () => {
-            canvas.width = window.innerWidth;
-            canvas.height = document.body.scrollHeight;
-            init();
-        };
-        
-        // Use a timeout to ensure the body has rendered and scrollHeight is accurate
-        setTimeout(() => {
-            handleResize();
-        }, 100);
-
-        window.addEventListener('resize', handleResize);
-        
-        init();
-        animate();
-
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('resize', handleResize);
-            cancelAnimationFrame(animationFrameId);
-        };
-    }, []);
-
-    return <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full z-0 opacity-50"></canvas>;
 };
 
 const useScrollReveal = () => {
@@ -186,101 +545,6 @@ const useScrollReveal = () => {
     return () => revealElements.forEach(el => observer.unobserve(el));
   }, []);
 };
-
-// --- Main App Component ---
-export default function App() {
-  const refs = {
-    pillars: useRef(null), about: useRef(null), timeline: useRef(null),
-    faq: useRef(null), register: useRef(null),
-  };
-  const scrollTo = (event, id) => {
-    event.preventDefault();
-    if (refs[id] && refs[id].current) {
-        refs[id].current.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-  const registrationFormUrl = "https://www.cognitoforms.com/HemasTransformation1/HemasAIthonOfficialTeamRegistration";
-  const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(registrationFormUrl)}&bgcolor=111827&color=e2e8f0&qzone=1`;
-  useScrollReveal();
-
-  const [isScrolled, setIsScrolled] = useState(false);
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  return (
-    <>
-      <style>{`
-        @keyframes aurora { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        .aurora-bg {
-          background: radial-gradient(ellipse at top, rgba(20, 209, 190, 0.1), transparent 50%),
-                      radial-gradient(ellipse at bottom, rgba(255, 118, 1, 0.1), transparent 50%);
-          animation: aurora 20s ease infinite;
-        }
-        .glass-card {
-          background: rgba(17, 24, 39, 0.6);
-          backdrop-filter: blur(16px) saturate(180%);
-          -webkit-backdrop-filter: blur(16px) saturate(180%);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          transition: all 0.3s ease;
-          position: relative;
-          overflow: hidden;
-        }
-        .glass-card:hover {
-          border-color: rgba(20, 209, 190, 0.5);
-          box-shadow: 0 0 20px rgba(20, 209, 190, 0.1);
-        }
-        @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in-up { display: inline-block; opacity: 0; animation: fade-in-up 0.6s forwards; }
-        .scroll-reveal { opacity: 0; transform: translateY(30px) scale(0.98); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
-        .scroll-reveal.visible { opacity: 1; transform: translateY(0) scale(1); }
-        
-        @keyframes ripple { to { transform: scale(4); opacity: 0; } }
-        .ripple {
-          position: absolute;
-          border-radius: 50%;
-          transform: scale(0);
-          animation: ripple 600ms linear;
-          background-color: rgba(255, 255, 255, 0.7);
-        }
-        .button-glare {
-          position: absolute;
-          top: 0;
-          left: -150%;
-          width: 50%;
-          height: 100%;
-          background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
-          transform: skewX(-25deg);
-          transition: left 0.75s;
-        }
-        .group:hover .button-glare { left: 150%; }
-      `}</style>
-      <div style={{backgroundColor: '#0a101f', fontFamily: "'Poppins', sans-serif"}} className="text-slate-300 antialiased overflow-x-hidden">
-        <ParticleBackground />
-        <div className="fixed top-0 left-0 w-full h-full aurora-bg z-0"></div>
-        
-        <Header scrollTo={scrollTo} isScrolled={isScrolled} />
-
-        <main className="relative z-10">
-          <Hero scrollTo={scrollTo} />
-          <div ref={refs.about}><About /></div>
-          <WhyJoin />
-          <div ref={refs.pillars}><TechPillars /></div>
-          <div ref={refs.timeline}><CompetitionTimeline /></div>
-          <Prizes />
-          <div ref={refs.faq}><FAQ /></div>
-          <Registration qrCodeUrl={qrCodeApiUrl} formUrl={registrationFormUrl} ref={refs.register} />
-        </main>
-        
-        <Footer />
-      </div>
-    </>
-  );
-}
-
-// --- Re-imagined Components ---
 
 function Header({ scrollTo, isScrolled }) {
   const createRipple = (event) => {
@@ -461,6 +725,7 @@ function CompetitionTimeline() {
         </section>
     );
 }
+
 function Prizes() {
   return (
     <section id="prizes" className="py-20 bg-black/20">
@@ -534,11 +799,117 @@ const Registration = React.forwardRef(({ qrCodeUrl, formUrl }, ref) => {
 
 function Footer() {
     return (
-        <footer className="bg-black/30 border-t border-slate-800">
+        <footer className="bg-black/30 border-t border-slate-800 relative z-10">
             <div className="container mx-auto px-6 py-8 text-center text-slate-500">
                 <p>&copy; {new Date().getFullYear()} Hemas Holdings PLC. An Initiative by the Transformation Team.</p>
                 <p className="text-sm mt-2">Forge the future. Build with purpose.</p>
             </div>
         </footer>
     );
+}
+
+// --- MAIN APP COMPONENT ---
+export default function App() {
+  const refs = {
+    pillars: useRef(null), about: useRef(null), timeline: useRef(null),
+    faq: useRef(null), register: useRef(null),
+  };
+  const scrollTo = (event, id) => {
+    event.preventDefault();
+    if (refs[id] && refs[id].current) {
+        refs[id].current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+  const registrationFormUrl = "https://www.cognitoforms.com/HemasTransformation1/HemasAIthonOfficialTeamRegistration";
+  const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(registrationFormUrl)}&bgcolor=111827&color=e2e8f0&qzone=1`;
+  useScrollReveal();
+
+  const [isScrolled, setIsScrolled] = useState(false);
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <>
+      <style>{`
+        body {
+            background-color: #0a101f;
+            font-family: 'Poppins', sans-serif;
+        }
+        @keyframes gradientShift {
+          0% { filter: hue-rotate(0deg); transform: scale(1) rotate(0deg); }
+          50% { filter: hue-rotate(90deg); transform: scale(1.05) rotate(1deg); }
+          100% { filter: hue-rotate(180deg); transform: scale(1) rotate(0deg); }
+        }
+        @keyframes scanlines {
+          0% { transform: translateY(-100%); }
+          100% { transform: translateY(100vh); }
+        }
+        @keyframes aurora { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .aurora-bg {
+          background: radial-gradient(ellipse at top, rgba(20, 209, 190, 0.1), transparent 50%),
+                      radial-gradient(ellipse at bottom, rgba(255, 118, 1, 0.1), transparent 50%);
+          animation: aurora 20s ease infinite;
+        }
+        .glass-card {
+          background: rgba(17, 24, 39, 0.6);
+          backdrop-filter: blur(16px) saturate(180%);
+          -webkit-backdrop-filter: blur(16px) saturate(180%);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          transition: all 0.3s ease;
+          position: relative;
+          overflow: hidden;
+        }
+        .glass-card:hover {
+          border-color: rgba(20, 209, 190, 0.5);
+          box-shadow: 0 0 20px rgba(20, 209, 190, 0.1);
+        }
+        @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in-up { display: inline-block; opacity: 0; animation: fade-in-up 0.6s forwards; }
+        .scroll-reveal { opacity: 0; transform: translateY(30px) scale(0.98); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
+        .scroll-reveal.visible { opacity: 1; transform: translateY(0) scale(1); }
+        
+        @keyframes ripple { to { transform: scale(4); opacity: 0; } }
+        .ripple {
+          position: absolute;
+          border-radius: 50%;
+          transform: scale(0);
+          animation: ripple 600ms linear;
+          background-color: rgba(255, 255, 255, 0.7);
+        }
+        .button-glare {
+          position: absolute;
+          top: 0;
+          left: -150%;
+          width: 50%;
+          height: 100%;
+          background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0) 100%);
+          transform: skewX(-25deg);
+          transition: left 0.75s;
+        }
+        .group:hover .button-glare { left: 150%; }
+        .glow-teal { text-shadow: 0 0 12px rgba(20, 209, 190, 0.8); }
+      `}</style>
+      <div className="text-slate-300 antialiased overflow-x-hidden">
+        <FuturisticAiBackground />
+        
+        <Header scrollTo={scrollTo} isScrolled={isScrolled} />
+
+        <main className="relative z-10">
+          <Hero scrollTo={scrollTo} />
+          <div ref={refs.about}><About /></div>
+          <WhyJoin />
+          <div ref={refs.pillars}><TechPillars /></div>
+          <div ref={refs.timeline}><CompetitionTimeline /></div>
+          <Prizes />
+          <div ref={refs.faq}><FAQ /></div>
+          <Registration qrCodeUrl={qrCodeApiUrl} formUrl={registrationFormUrl} ref={refs.register} />
+        </main>
+        
+        <Footer />
+      </div>
+    </>
+  );
 }
