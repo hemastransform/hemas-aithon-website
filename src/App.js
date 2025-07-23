@@ -591,6 +591,7 @@ function Hero({ scrollTo }) {
         <div className="animate-fade-in-up flex justify-center" style={{animationDelay: '1.2s'}}>
           <button onClick={(e) => scrollTo(e, 'register')} className="group relative overflow-hidden mt-12 bg-gradient-to-r from-teal-500 to-cyan-500 hover:shadow-2xl hover:shadow-teal-500/40 text-white font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-110 shadow-xl">
             <span className="button-glare"></span>
+            
             Apply to Join the Vanguard
           </button>
         </div>
