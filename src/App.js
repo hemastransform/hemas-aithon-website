@@ -48,20 +48,128 @@ const AnimatedText = ({ text, className, delay = 0 }) => {
     );
 };
 
-const useMousePosition = () => {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+const ParticleBackground = () => {
+    const canvasRef = useRef(null);
+    const mouse = useRef({ x: undefined, y: undefined, radius: 150 });
 
-  useEffect(() => {
-    const updateMousePosition = ev => {
-      setMousePosition({ x: ev.clientX, y: ev.clientY });
-    };
-    window.addEventListener('mousemove', updateMousePosition);
-    return () => {
-      window.removeEventListener('mousemove', updateMousePosition);
-    };
-  }, []);
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = document.body.scrollHeight; // Set height to full scroll height
 
-  return mousePosition;
+        let particlesArray = [];
+
+        const handleMouseMove = (event) => {
+            mouse.current.x = event.clientX;
+            mouse.current.y = event.clientY + window.scrollY;
+        };
+        window.addEventListener('mousemove', handleMouseMove);
+
+        class Particle {
+            constructor(x, y, directionX, directionY, size, color) {
+                this.x = x;
+                this.y = y;
+                this.directionX = directionX;
+                this.directionY = directionY;
+                this.size = size;
+                this.color = color;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+            update() {
+                if (this.x > canvas.width || this.x < 0) this.directionX = -this.directionX;
+                if (this.y > canvas.height || this.y < 0) this.directionY = -this.directionY;
+                
+                if (mouse.current.x !== undefined && mouse.current.y !== undefined) {
+                    let dx = mouse.current.x - this.x;
+                    let dy = mouse.current.y - this.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < mouse.current.radius) {
+                        if (this.x < mouse.current.x && this.x > 0) this.x -= 1;
+                        if (this.x > mouse.current.x && this.x < canvas.width) this.x += 1;
+                        if (this.y < mouse.current.y && this.y > 0) this.y -= 1;
+                        if (this.y > mouse.current.y && this.y < canvas.height) this.y += 1;
+                    }
+                }
+
+                this.x += this.directionX;
+                this.y += this.directionY;
+                this.draw();
+            }
+        }
+
+        function init() {
+            particlesArray = [];
+            let numberOfParticles = (canvas.height * canvas.width) / 12000;
+            for (let i = 0; i < numberOfParticles; i++) {
+                let size = (Math.random() * 1.5) + 1;
+                let x = Math.random() * canvas.width;
+                let y = Math.random() * canvas.height;
+                let directionX = (Math.random() * .4) - .2;
+                let directionY = (Math.random() * .4) - .2;
+                let color = 'rgba(20, 209, 190, 0.6)';
+                particlesArray.push(new Particle(x, y, directionX, directionY, size, color));
+            }
+        }
+
+        function connect() {
+            let opacityValue = 1;
+            for (let a = 0; a < particlesArray.length; a++) {
+                for (let b = a; b < particlesArray.length; b++) {
+                    let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x))
+                                 + ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
+                    if (distance < (canvas.width / 8) * (canvas.height / 8)) {
+                        opacityValue = 1 - (distance / 20000);
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${opacityValue * 0.2})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                        ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        let animationFrameId;
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+            }
+            connect();
+            animationFrameId = requestAnimationFrame(animate);
+        }
+
+        const handleResize = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = document.body.scrollHeight;
+            init();
+        };
+        
+        // Use a timeout to ensure the body has rendered and scrollHeight is accurate
+        setTimeout(() => {
+            handleResize();
+        }, 100);
+
+        window.addEventListener('resize', handleResize);
+        
+        init();
+        animate();
+
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('resize', handleResize);
+            cancelAnimationFrame(animationFrameId);
+        };
+    }, []);
+
+    return <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full z-0 opacity-50"></canvas>;
 };
 
 const useScrollReveal = () => {
@@ -93,7 +201,6 @@ export default function App() {
   };
   const registrationFormUrl = "https://www.cognitoforms.com/HemasTransformation1/HemasAIthonOfficialTeamRegistration";
   const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(registrationFormUrl)}&bgcolor=111827&color=e2e8f0&qzone=1`;
-  const { x, y } = useMousePosition();
   useScrollReveal();
 
   const [isScrolled, setIsScrolled] = useState(false);
@@ -151,9 +258,8 @@ export default function App() {
         .group:hover .button-glare { left: 150%; }
       `}</style>
       <div style={{backgroundColor: '#0a101f', fontFamily: "'Poppins', sans-serif"}} className="text-slate-300 antialiased overflow-x-hidden">
+        <ParticleBackground />
         <div className="fixed top-0 left-0 w-full h-full aurora-bg z-0"></div>
-        <div className="fixed top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/hexellence.png')] opacity-[0.03] z-0"></div>
-        <div className="fixed top-0 left-0 w-screen h-screen pointer-events-none z-20" style={{ background: `radial-gradient(600px at ${x}px ${y}px, rgba(29, 78, 216, 0.15), transparent 80%)`}}></div>
         
         <Header scrollTo={scrollTo} isScrolled={isScrolled} />
 
@@ -262,19 +368,15 @@ function WhyJoin() {
           <h2 className="text-4xl font-bold text-white scroll-reveal">This is Your Gateway.</h2>
           <p className="mt-4 text-lg text-slate-400 scroll-reveal" style={{transitionDelay: '200ms'}}>Why this is the only tech event that matters for your career this year.</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 glass-card rounded-2xl p-8 text-left flex flex-col justify-center scroll-reveal" style={{transitionDelay: '300ms'}}>
-                <h3 className="text-2xl font-bold text-teal-400 mb-4">{whyJoinData[0].title}</h3>
-                <p className="text-slate-300 text-lg">{whyJoinData[0].description}</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {whyJoinData.map((item, index) => (
+            <div key={index} className={`glass-card rounded-2xl p-8 text-center flex flex-col justify-center items-center scroll-reveal`} style={{transitionDelay: `${300 + index * 100}ms`}}>
+              <div>
+                <h3 className="text-2xl font-bold text-teal-400 mb-4">{item.title}</h3>
+                <p className="text-slate-300 text-lg">{item.description}</p>
+              </div>
             </div>
-            <div className="glass-card rounded-2xl p-8 text-left flex flex-col justify-center scroll-reveal" style={{transitionDelay: '400ms'}}>
-                <h3 className="text-2xl font-bold text-teal-400 mb-4">{whyJoinData[1].title}</h3>
-                <p className="text-slate-300 text-lg">{whyJoinData[1].description}</p>
-            </div>
-            <div className="lg:col-span-3 glass-card rounded-2xl p-8 text-left flex flex-col justify-center scroll-reveal" style={{transitionDelay: '500ms'}}>
-                <h3 className="text-2xl font-bold text-teal-400 mb-4">{whyJoinData[2].title}</h3>
-                <p className="text-slate-300 text-lg">{whyJoinData[2].description}</p>
-            </div>
+          ))}
         </div>
       </div>
     </section>
