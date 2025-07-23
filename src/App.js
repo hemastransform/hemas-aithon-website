@@ -31,9 +31,8 @@ const NeuralNetwork = () => {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    // Arrays to store the neural network's nodes and connections.
+    // Array to store the neural network's nodes.
     const nodes = [];
-    const connections = [];
     const nodeCount = 80; // The total number of nodes in the network.
 
     // --- Initialization ---
@@ -48,25 +47,6 @@ const NeuralNetwork = () => {
         pulsePhase: Math.random() * Math.PI * 2, // Random phase for the pulse animation.
         size: Math.random() * 3 + 1            // Random base size for the node.
       });
-    }
-
-    // Create connections between nodes that are close to each other.
-    for (let i = 0; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
-        const dx = nodes[i].x - nodes[j].x;
-        const dy = nodes[i].y - nodes[j].y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        // If the distance is less than a threshold, create a connection.
-        if (distance < 150) {
-          connections.push({
-            nodeA: i, // Index of the first node.
-            nodeB: j, // Index of the second node.
-            strength: 1 - (distance / 150), // Connection strength based on distance.
-            pulseOffset: Math.random() * Math.PI * 2 // Random offset for the connection's pulse.
-          });
-        }
-      }
     }
 
     // --- Animation Loop ---
@@ -114,46 +94,38 @@ const NeuralNetwork = () => {
         ctx.fill();
       });
 
-      // Draw each connection.
-      connections.forEach(conn => {
-        const nodeA = nodes[conn.nodeA];
-        const nodeB = nodes[conn.nodeB];
+      // --- Dynamic Connection Drawing ---
+      // In every frame, check all pairs of nodes to see if they should be connected.
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const nodeA = nodes[i];
+          const nodeB = nodes[j];
+          const dx = nodeB.x - nodeA.x;
+          const dy = nodeB.y - nodeA.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
 
-        const dx = nodeB.x - nodeA.x;
-        const dy = nodeB.y - nodeA.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+          // If the distance is less than the threshold, draw a connection for this frame.
+          if (distance < 150) {
+            const strength = 1 - (distance / 150);
+            const opacity = strength * (nodeA.energy + nodeB.energy) / 2;
+            const pulse = Math.sin(time * 2 + i + j) * 0.3 + 0.7; // Use indices for a varied pulse
 
-        // Only draw connections if they are within the threshold.
-        if (distance < 150) {
-          const opacity = conn.strength * (nodeA.energy + nodeB.energy) / 2;
-          const pulse = Math.sin(time * 2 + conn.pulseOffset) * 0.3 + 0.7;
+            // Create a gradient for the line to make it glow.
+            const gradient = ctx.createLinearGradient(nodeA.x, nodeA.y, nodeB.x, nodeB.y);
+            gradient.addColorStop(0, `rgba(255, 118, 1, ${opacity * pulse})`);
+            gradient.addColorStop(0.5, `rgba(20, 209, 190, ${opacity * pulse * 1.2})`);
+            gradient.addColorStop(1, `rgba(255, 118, 1, ${opacity * pulse})`);
 
-          // Create a gradient for the line to make it glow.
-          const gradient = ctx.createLinearGradient(nodeA.x, nodeA.y, nodeB.x, nodeB.y);
-          gradient.addColorStop(0, `rgba(255, 118, 1, ${opacity * pulse})`);
-          gradient.addColorStop(0.5, `rgba(20, 209, 190, ${opacity * pulse * 1.2})`);
-          gradient.addColorStop(1, `rgba(255, 118, 1, ${opacity * pulse})`);
-
-          ctx.strokeStyle = gradient;
-          ctx.lineWidth = 1 + pulse;
-          ctx.beginPath();
-          ctx.moveTo(nodeA.x, nodeA.y);
-          ctx.lineTo(nodeB.x, nodeB.y);
-          ctx.stroke();
-
-          // Occasionally draw a "data packet" moving along the connection.
-          if (Math.random() < 0.003) {
-            const t = Math.random();
-            const packetX = nodeA.x + dx * t;
-            const packetY = nodeA.y + dy * t;
-
-            ctx.fillStyle = `rgba(100, 255, 220, ${opacity})`;
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = 1 + pulse;
             ctx.beginPath();
-            ctx.arc(packetX, packetY, 2, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.moveTo(nodeA.x, nodeA.y);
+            ctx.lineTo(nodeB.x, nodeB.y);
+            ctx.stroke();
           }
         }
-      });
+      }
+
       // Request the next frame of the animation.
       animationRef.current = requestAnimationFrame(animate);
     };
@@ -734,7 +706,7 @@ function Hero({ scrollTo }) {
             {/* Animated headlines with adjusted responsive font sizes */}
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tight">
               <AnimatedText text="Code the Unimaginable." className="block bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400" />
-              <AnimatedText text="Invent with Intelligence." className="block text-teal-400 title-glow mt-2" delay={0.5} />
+              <AnimatedText text="The Art of the Possible" className="block text-teal-400 title-glow mt-2" delay={0.5} />
             </h1>
             {/* Introductory paragraph */}
             <p className="mt-6 text-lg md:text-xl text-slate-200 max-w-3xl mx-auto animate-fade-in-up" style={{animationDelay: '1s'}}>
@@ -758,7 +730,7 @@ function About() {
         <section className="py-20 bg-black/20">
             <div className="container mx-auto px-6">
                 <div className="text-center mb-16">
-                    <h2 className="text-4xl font-bold text-white scroll-reveal title-glow">The Art of the Possible</h2>
+                    <h2 className="text-4xl font-bold text-white scroll-reveal title-glow">Invent with Intelligence</h2>
                     <p className="mt-4 text-lg text-slate-300 max-w-4xl mx-auto scroll-reveal" style={{transitionDelay: '200ms'}}>We are strategically pivoting from a traditional hackathon to an innovative **"Discovery & Build"** framework. We immerse the brightest university talent in the world of Hemas—our businesses and strategic ambitions. Then, we challenge you to identify unique opportunities and design your own AI solutions, ensuring projects are not only technically brilliant but also rooted in genuine business insight.</p>
                 </div>
                 <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
