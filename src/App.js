@@ -174,10 +174,8 @@ const CodeParticles = () => {
       });
       particles[i].originalSymbol = particles[i].symbol;
     }
-    let time = 0;
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      time += 0.016;
       particles.forEach(particle => {
         particle.x += particle.vx;
         particle.y += particle.vy;
