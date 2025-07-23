@@ -1,75 +1,101 @@
 import React, { useRef, useEffect, useState } from 'react';
 
-// --- BACKGROUND ANIMATION COMPONENTS (from Code 1) ---
+// --- BACKGROUND ANIMATION COMPONENTS ---
 
-// Neural Network Animation Component
+/**
+ * @name NeuralNetwork
+ * @description This component creates a dynamic, interactive neural network animation on an HTML canvas.
+ * It simulates nodes (neurons) moving around and the connections (synapses) between them, which pulse with energy.
+ * The animation is designed to be a visually engaging background that represents the concept of Artificial Intelligence.
+ * It's performance-optimized by using requestAnimationFrame for smooth rendering.
+ */
 const NeuralNetwork = () => {
+  // A ref to hold the canvas DOM element.
   const canvasRef = useRef(null);
+  // A ref to hold the ID of the animation frame, so we can cancel it on cleanup.
   const animationRef = useRef();
+
+  // The main effect hook that runs once when the component mounts.
   useEffect(() => {
+    // Get the canvas element and its 2D rendering context.
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
+    // Function to resize the canvas to fill the entire window.
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     };
 
+    // Initial resize and event listener for future window resizing.
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
+    // Arrays to store the neural network's nodes and connections.
     const nodes = [];
     const connections = [];
-    const nodeCount = 80;
+    const nodeCount = 80; // The total number of nodes in the network.
 
-    // Create nodes
+    // --- Initialization ---
+    // Create all the nodes with random initial positions, velocities, and properties.
     for (let i = 0; i < nodeCount; i++) {
       nodes.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.8,
-        vy: (Math.random() - 0.5) * 0.8,
-        energy: Math.random(),
-        pulsePhase: Math.random() * Math.PI * 2,
-        size: Math.random() * 3 + 1
+        x: Math.random() * canvas.width,       // Random horizontal position.
+        y: Math.random() * canvas.height,      // Random vertical position.
+        vx: (Math.random() - 0.5) * 0.8,       // Random horizontal velocity.
+        vy: (Math.random() - 0.5) * 0.8,       // Random vertical velocity.
+        energy: Math.random(),                 // Initial energy level for pulsing effect.
+        pulsePhase: Math.random() * Math.PI * 2, // Random phase for the pulse animation.
+        size: Math.random() * 3 + 1            // Random base size for the node.
       });
     }
-    // Create connections
+
+    // Create connections between nodes that are close to each other.
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
         const dx = nodes[i].x - nodes[j].x;
         const dy = nodes[i].y - nodes[j].y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
+        // If the distance is less than a threshold, create a connection.
         if (distance < 150) {
           connections.push({
-            nodeA: i,
-            nodeB: j,
-            strength: 1 - (distance / 150),
-            pulseOffset: Math.random() * Math.PI * 2
+            nodeA: i, // Index of the first node.
+            nodeB: j, // Index of the second node.
+            strength: 1 - (distance / 150), // Connection strength based on distance.
+            pulseOffset: Math.random() * Math.PI * 2 // Random offset for the connection's pulse.
           });
         }
       }
     }
-    let time = 0;
+
+    // --- Animation Loop ---
+    let time = 0; // A counter to drive the animation's sine wave-based pulses.
     const animate = () => {
+      // Use a semi-transparent fill to create a motion-blur effect.
       ctx.fillStyle = 'rgba(10, 16, 31, 0.1)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      time += 0.02;
-      // Update and draw nodes
-      nodes.forEach((node, i) => {
+      time += 0.02; // Increment time for the next frame.
+
+      // Update and draw each node.
+      nodes.forEach((node) => {
+        // Update the node's position based on its velocity.
         node.x += node.vx;
         node.y += node.vy;
 
+        // Bounce the node off the edges of the canvas.
         if (node.x < 0 || node.x > canvas.width) node.vx *= -1;
         if (node.y < 0 || node.y > canvas.height) node.vy *= -1;
 
+        // Ensure nodes don't go out of bounds.
         node.x = Math.max(0, Math.min(canvas.width, node.x));
         node.y = Math.max(0, Math.min(canvas.height, node.y));
 
+        // Update the node's energy using a sine wave for a pulsing effect.
         node.energy = (Math.sin(time + node.pulsePhase) + 1) / 2;
 
+        // Draw the node's outer glow.
         const radius = node.size + node.energy * 2;
         const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, radius * 2);
         gradient.addColorStop(0, `rgba(20, 209, 190, ${0.8 * node.energy})`);
@@ -81,12 +107,14 @@ const NeuralNetwork = () => {
         ctx.arc(node.x, node.y, radius * 2, 0, Math.PI * 2);
         ctx.fill();
 
+        // Draw the node's core.
         ctx.fillStyle = `rgba(255, 255, 255, ${0.9 * node.energy})`;
         ctx.beginPath();
         ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
         ctx.fill();
       });
-      // Draw connections
+
+      // Draw each connection.
       connections.forEach(conn => {
         const nodeA = nodes[conn.nodeA];
         const nodeB = nodes[conn.nodeB];
@@ -95,10 +123,12 @@ const NeuralNetwork = () => {
         const dy = nodeB.y - nodeA.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
+        // Only draw connections if they are within the threshold.
         if (distance < 150) {
           const opacity = conn.strength * (nodeA.energy + nodeB.energy) / 2;
           const pulse = Math.sin(time * 2 + conn.pulseOffset) * 0.3 + 0.7;
 
+          // Create a gradient for the line to make it glow.
           const gradient = ctx.createLinearGradient(nodeA.x, nodeA.y, nodeB.x, nodeB.y);
           gradient.addColorStop(0, `rgba(255, 118, 1, ${opacity * pulse})`);
           gradient.addColorStop(0.5, `rgba(20, 209, 190, ${opacity * pulse * 1.2})`);
@@ -111,6 +141,7 @@ const NeuralNetwork = () => {
           ctx.lineTo(nodeB.x, nodeB.y);
           ctx.stroke();
 
+          // Occasionally draw a "data packet" moving along the connection.
           if (Math.random() < 0.003) {
             const t = Math.random();
             const packetX = nodeA.x + dx * t;
@@ -123,28 +154,41 @@ const NeuralNetwork = () => {
           }
         }
       });
+      // Request the next frame of the animation.
       animationRef.current = requestAnimationFrame(animate);
     };
+    // Start the animation loop.
     animate();
+
+    // Cleanup function to run when the component unmounts.
     return () => {
       window.removeEventListener('resize', resizeCanvas);
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, []);
+  }, []); // Empty dependency array means this effect runs only once.
+
+  // Render the canvas element.
   return (
     <canvas
       ref={canvasRef}
       className="absolute inset-0 w-full h-full"
-      style={{ mixBlendMode: 'screen' }}
+      style={{ mixBlendMode: 'screen' }} // Blend mode for a cool visual effect against other layers.
     />
   );
 };
 
+/**
+ * @name CodeParticles
+ * @description Renders floating, rotating particles that look like code symbols (0, 1, {}, etc.).
+ * This adds to the digital, "in-the-code" aesthetic of the background.
+ * Includes a "glitch" effect where particles occasionally flicker to a different symbol.
+ */
 const CodeParticles = () => {
   const canvasRef = useRef(null);
   const animationRef = useRef();
+
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -153,12 +197,16 @@ const CodeParticles = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     };
-
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
-    const codeSymbols = ['0', '1', '{', '}', '<', '>', '/', '\\', '()', '[]', 'AI', 'ML', 'λ', 'Σ', '∞', '→', '⟨⟩', '∧', '∨'];
+
+    // An array of symbols to be used as particles. Heavily weighted with '0' and '1'.
+    const codeSymbols = ['AR', 'VR', 'IOT', 'Vibe Coding', 'CV', 'AI Agents','Big Data','Data','0', '1', '0', '1', 'NN','0', '1', '0', '1', '0', '1', '{', '}', '<>', 'AI', '0', '1', 'ML', 'GPT', 'NLP','Python', 'Java', 'R'];
     const particles = [];
-    for (let i = 0; i < 50; i++) {
+    const particleCount = 100; // Increased count for a denser binary field.
+
+    // Initialize all particles with random properties.
+    for (let i = 0; i < particleCount; i++) {
       particles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
@@ -169,46 +217,63 @@ const CodeParticles = () => {
         size: Math.random() * 12 + 8,
         rotation: 0,
         rotationSpeed: (Math.random() - 0.5) * 0.02,
-        glitchTime: 0,
+        glitchTime: 0, // A countdown timer for the glitch effect.
         originalSymbol: ''
       });
-      particles[i].originalSymbol = particles[i].symbol;
+      particles[i].originalSymbol = particles[i].symbol; // Store the original symbol to revert after glitch.
     }
+
+    // The animation loop.
     const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas each frame.
+
       particles.forEach(particle => {
+        // Update particle physics.
         particle.x += particle.vx;
         particle.y += particle.vy;
         particle.rotation += particle.rotationSpeed;
+
+        // Wrap particles around the screen for a continuous effect.
         if (particle.x < -50) particle.x = canvas.width + 50;
         if (particle.x > canvas.width + 50) particle.x = -50;
         if (particle.y < -50) particle.y = canvas.height + 50;
         if (particle.y > canvas.height + 50) particle.y = -50;
+
+        // Handle the glitch effect logic.
         particle.glitchTime -= 0.016;
         if (particle.glitchTime <= 0 && Math.random() < 0.002) {
-          particle.glitchTime = 0.5;
+          particle.glitchTime = 0.5; // Start a glitch.
           particle.symbol = codeSymbols[Math.floor(Math.random() * codeSymbols.length)];
         }
         if (particle.glitchTime <= 0) {
-          particle.symbol = particle.originalSymbol;
+          particle.symbol = particle.originalSymbol; // End the glitch.
         }
-        ctx.save();
-        ctx.translate(particle.x, particle.y);
-        ctx.rotate(particle.rotation);
+
+        // Draw the particle.
+        ctx.save(); // Save the current canvas state.
+        ctx.translate(particle.x, particle.y); // Move origin to the particle's position.
+        ctx.rotate(particle.rotation); // Rotate the canvas.
+
+        // Add a glow effect, changing color during a glitch.
         ctx.shadowColor = particle.glitchTime > 0 ? '#ff7601' : '#14d1be';
         ctx.shadowBlur = 10;
+
+        // Set the particle's color, changing during a glitch.
         ctx.fillStyle = particle.glitchTime > 0
            ? `rgba(255, 118, 1, ${particle.opacity})`
            : `rgba(20, 209, 190, ${particle.opacity})`;
         ctx.font = `${particle.size}px 'Courier New', monospace`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(particle.symbol, 0, 0);
-        ctx.restore();
+        ctx.fillText(particle.symbol, 0, 0); // Draw the symbol at the new origin.
+
+        ctx.restore(); // Restore the canvas state.
       });
+
       animationRef.current = requestAnimationFrame(animate);
     };
     animate();
+
     return () => {
       window.removeEventListener('resize', resizeCanvas);
       if (animationRef.current) {
@@ -216,6 +281,7 @@ const CodeParticles = () => {
       }
     };
   }, []);
+
   return (
     <canvas
       ref={canvasRef}
@@ -225,9 +291,16 @@ const CodeParticles = () => {
   );
 };
 
+/**
+ * @name MatrixRain
+ * @description Creates the classic "Matrix" style digital rain effect.
+ * This version is modified to use only '0's and '1's for a pure binary feel,
+ * reinforcing the theme requested by the user.
+ */
 const MatrixRain = () => {
   const canvasRef = useRef(null);
   const animationRef = useRef();
+
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -236,36 +309,48 @@ const MatrixRain = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     };
-
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
+
     const fontSize = 14;
-    const columns = canvas.width / fontSize;
-    const drops = [];
+    const columns = canvas.width / fontSize; // Calculate how many columns of text can fit.
+    const drops = []; // An array to store the y-position of each drop in a column.
+
+    // Initialize each drop at a random vertical position.
     for (let i = 0; i < columns; i++) {
       drops[i] = Math.random() * canvas.height;
     }
-    const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+
+    const chars = '01'; // The character set is restricted to binary.
+
     const draw = () => {
+      // Draw a semi-transparent black rectangle to create the fading trail effect.
       ctx.fillStyle = 'rgba(10, 16, 31, 0.05)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.font = fontSize + 'px monospace';
+
+      // Loop through each column.
       for (let i = 0; i < drops.length; i++) {
         const char = chars[Math.floor(Math.random() * chars.length)];
-        const opacity = 1 - (drops[i] / canvas.height);
+        const opacity = 1 - (drops[i] / canvas.height); // Fade out characters as they fall.
         ctx.fillStyle = `rgba(20, 209, 190, ${Math.max(0.1, opacity)})`;
-        ctx.fillText(char, i * fontSize, drops[i]);
-        if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+
+        ctx.fillText(char, i * fontSize, drops[i]); // Draw the character.
+
+        // If a drop has reached the bottom, randomly reset it to the top.
+        if (drops[i] > canvas.height && Math.random() > 0.975) {
           drops[i] = 0;
         }
-        drops[i] += fontSize;
+        drops[i] += fontSize; // Move the drop down for the next frame.
       }
     };
+
     const animate = () => {
       draw();
       animationRef.current = requestAnimationFrame(animate);
     };
     animate();
+
     return () => {
       window.removeEventListener('resize', resizeCanvas);
       if (animationRef.current) {
@@ -273,6 +358,7 @@ const MatrixRain = () => {
       }
     };
   }, []);
+
   return (
     <canvas
       ref={canvasRef}
@@ -282,9 +368,15 @@ const MatrixRain = () => {
   );
 };
 
+/**
+ * @name GeometricShapes
+ * @description Renders large, faint, rotating geometric shapes (triangles, squares, etc.) in the background.
+ * This adds a layer of subtle complexity and structure to the otherwise chaotic background animations.
+ */
 const GeometricShapes = () => {
   const canvasRef = useRef(null);
   const animationRef = useRef();
+
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -293,24 +385,28 @@ const GeometricShapes = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     };
-
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
-    const shapes = [];
 
-    for (let i = 0; i < 15; i++) {
+    const shapes = [];
+    const shapeCount = 15;
+
+    // Initialize shapes with random properties.
+    for (let i = 0; i < shapeCount; i++) {
       shapes.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         size: Math.random() * 100 + 50,
         rotation: 0,
         rotationSpeed: (Math.random() - 0.5) * 0.01,
-        type: Math.floor(Math.random() * 4),
+        type: Math.floor(Math.random() * 4), // 0: triangle, 1: square, etc.
         opacity: Math.random() * 0.1 + 0.05,
         pulse: Math.random() * Math.PI * 2
       });
     }
+
     let time = 0;
+    // Helper functions to draw different shapes.
     const drawTriangle = (x, y, size, rotation) => {
       ctx.save();
       ctx.translate(x, y);
@@ -345,22 +441,25 @@ const GeometricShapes = () => {
       ctx.closePath();
       ctx.restore();
     };
+
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       time += 0.016;
+
       shapes.forEach(shape => {
         shape.rotation += shape.rotationSpeed;
         const pulseFactor = Math.sin(time + shape.pulse) * 0.3 + 1;
         const currentSize = shape.size * pulseFactor;
-        const gradient = ctx.createRadialGradient(
-          shape.x, shape.y, 0,
-          shape.x, shape.y, currentSize
-        );
+
+        // Create a radial gradient for a soft, glowing stroke.
+        const gradient = ctx.createRadialGradient(shape.x, shape.y, 0, shape.x, shape.y, currentSize);
         gradient.addColorStop(0, `rgba(20, 209, 190, ${shape.opacity})`);
         gradient.addColorStop(0.7, `rgba(255, 118, 1, ${shape.opacity * 0.5})`);
         gradient.addColorStop(1, 'rgba(20, 209, 190, 0)');
         ctx.strokeStyle = gradient;
         ctx.lineWidth = 2;
+
+        // Draw the shape based on its type.
         switch (shape.type) {
           case 0: drawTriangle(shape.x, shape.y, currentSize, shape.rotation); break;
           case 1: drawSquare(shape.x, shape.y, currentSize, shape.rotation); break;
@@ -370,9 +469,11 @@ const GeometricShapes = () => {
         }
         ctx.stroke();
       });
+
       animationRef.current = requestAnimationFrame(animate);
     };
     animate();
+
     return () => {
       window.removeEventListener('resize', resizeCanvas);
       if (animationRef.current) {
@@ -380,36 +481,41 @@ const GeometricShapes = () => {
       }
     };
   }, []);
-  return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 w-full h-full"
-      style={{ opacity: 0.4 }}
-    />
-  );
+
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" style={{ opacity: 0.4 }} />;
 };
 
+
+/**
+ * @name EnergyWaves
+ * @description Draws multiple layers of sine waves that move and distort over time.
+ * This creates a feeling of flowing energy or data streams in the background.
+ */
 const EnergyWaves = () => {
   const canvasRef = useRef(null);
   const animationRef = useRef();
+
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
     const resizeCanvas = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
     };
-
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
+
     let time = 0;
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       time += 0.02;
+
+      // Draw multiple wave layers for a parallax effect.
       for (let layer = 0; layer < 3; layer++) {
         ctx.beginPath();
         ctx.moveTo(0, canvas.height / 2);
+        // Combine multiple sine waves for a more complex and organic shape.
         for (let x = 0; x <= canvas.width; x += 5) {
           const y = canvas.height / 2 +
              Math.sin((x * 0.005) + time + (layer * 0.5)) * 30 +
@@ -417,6 +523,7 @@ const EnergyWaves = () => {
             Math.sin((x * 0.02) + time * 0.5 + (layer * 0.7)) * 8;
           ctx.lineTo(x, y);
         }
+        // Use a gradient for the wave's stroke color.
         const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
         gradient.addColorStop(0, `rgba(20, 209, 190, ${0.1 - layer * 0.02})`);
         gradient.addColorStop(0.5, `rgba(255, 118, 1, ${0.15 - layer * 0.03})`);
@@ -425,9 +532,11 @@ const EnergyWaves = () => {
         ctx.lineWidth = 2;
         ctx.stroke();
       }
+
       animationRef.current = requestAnimationFrame(animate);
     };
     animate();
+
     return () => {
       window.removeEventListener('resize', resizeCanvas);
       if (animationRef.current) {
@@ -435,19 +544,24 @@ const EnergyWaves = () => {
       }
     };
   }, []);
-  return (
-    <canvas
-      ref={canvasRef}
-      className="absolute inset-0 w-full h-full"
-      style={{ opacity: 0.5 }}
-    />
-  );
+
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" style={{ opacity: 0.5 }} />;
 };
 
+
+/**
+ * @name FuturisticAiBackground
+ * @description This is the main container component for all the background animations.
+ * It layers all the canvas animations on top of each other and adds some CSS-based effects
+ * like gradients and scanlines to complete the futuristic look.
+ */
 const FuturisticAiBackground = () => {
   return (
+    // A fixed container that fills the entire viewport and stays in the background.
     <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      {/* Base static gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-gray-900 to-black" />
+      {/* Animated gradient overlay for color shifting */}
       <div
         className="absolute inset-0 opacity-70"
         style={{
@@ -459,11 +573,13 @@ const FuturisticAiBackground = () => {
           animation: 'gradientShift 20s ease-in-out infinite alternate'
         }}
       />
+      {/* The canvas animation components, layered by their z-index and opacity. */}
       <MatrixRain />
       <EnergyWaves />
       <GeometricShapes />
       <NeuralNetwork />
       <CodeParticles />
+      {/* A scanline effect overlay to mimic a CRT monitor. */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -482,34 +598,35 @@ const FuturisticAiBackground = () => {
 };
 
 
-// --- CONTENT COMPONENTS & DATA (from Code 2) ---
+// --- CONTENT COMPONENTS & DATA ---
 
+// SVG icon components for use throughout the site.
 const IconBrainCircuit = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8"><path d="M12 2a10 10 0 0 0-10 10c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.1-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.1.39-1.99 1.03-2.69a3.6 3.6 0 0 1 .1-2.64s.84-.27 2.75 1.02a9.58 9.58 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.4.1 2.64.64.7 1.03 1.6 1.03 2.69 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.73c0 .27.16.59.67.5A10 10 0 0 0 22 12 10 10 0 0 0 12 2Z"/></svg>;
 const IconAutomation = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8"><path d="M12 8V4H8"/><rect x="4" y="12" width="8" height="8" rx="1"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M17 12h-2"/><path d="M17 22v-4h-2"/><path d="M12 17H4"/><path d="M12 12v-2h4v-2h-4V4H8"/></svg>;
 const IconExperience = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>;
 const IconFoundation = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8"><path d="M12 20.5L4 16V8l8-4 8 4v8Z"/><path d="M4 8l8 4 8-4"/><path d="M12 12v8.5"/></svg>;
 const IconExternalLink = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>;
+const PowerIcon = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v10"/><path d="M18.36 6.64a9 9 0 1 1-12.72 0"/></svg>;
 
+
+// Data arrays for different sections of the site. This keeps content separate from presentation.
 const techPillars = [
     { icon: <IconBrainCircuit />, title: "Core Intelligence & Models", description: "Build with, fine-tune, or create LLMs/SLMs. Develop advanced computer vision solutions that see and understand the world.", color: "teal" },
     { icon: <IconAutomation />, title: "Systems & Automation", description: "Design autonomous AI agents and agentic workflows. Create digital twins to simulate and optimize real-world business processes.", color: "sky" },
     { icon: <IconExperience />, title: "Human-Computer Interaction", description: "Build immersive AR/VR experiences that merge digital insights with reality. Develop the final web and mobile apps that deliver the magic.", color: "orange" },
     { icon: <IconFoundation />, title: "Foundational Inputs & Methodology", description: "Utilize IoT data from physical sensors to feed real-time information into your AI. Embrace 'Vibe Coding' for rapid, AI-assisted prototyping.", color: "rose" },
 ];
-
 const whyJoinData = [
     { title: "Build What Matters", description: "Tackle real-world challenges from Hemas's Healthcare, Consumer, and Mobility sectors. Your code could become a high-potential prototype that shapes our future.", size: "large" },
     { title: "Launch Your Career", description: "This is a direct talent pipeline. Impress us, and you'll be on the fast track for internships and recruitment into Hemas's most critical tech roles.", size: "small" },
     { title: "Wield Cutting-Edge Tech", description: "Get hands-on with the tools defining the future—Generative AI, agentic systems, IoT, and AR/VR, all backed by the power of Microsoft Azure.", size: "small" },
 ];
-
 const scheduleData = [
     { phase: "Phase 1", date: "Jul 28 - Aug 22", title: "University Outreach & Applications", description: "The official application process is launched. Aspiring participants can apply to be part of the initial cohort." },
     { phase: "Phase 2", date: "Aug 18 - Sep 5", title: "Participant Selection", description: "Applications are reviewed, and the top 50 students are selected and invited to the Hemas Immersion Day." },
     { phase: "Phase 3", date: "Sep 8 - Sep 19", title: "Immersion & Ideation", description: "Selected participants join the online Immersion Day and then compete in the one-week 'Agent Blueprint' challenge." },
     { phase: "Phase 4", date: "Sep 22 - Oct 1", title: "The AI-thon Finale", description: "The top 6 teams are selected to build their prototypes in a final, 24-hour hackathon event, followed by judging and awards." },
 ];
-
 const faqData = [
   { question: "What is the 'Discovery & Build' framework?", answer: "Instead of giving you a pre-defined problem, we immerse you in our business challenges. You get the 'structured freedom' to discover an opportunity and design your own AI solution, making your project highly relevant and innovative." },
   { question: "What is the team size?", answer: "Teams can have up to 5 members. You must register as a team. The registration form will require the name and NIC for each member." },
@@ -517,18 +634,34 @@ const faqData = [
   { question: "What will I gain from participating?", answer: "You will tackle real-world business problems, get hands-on experience with cutting-edge tech, and get noticed by our senior leadership. This is a direct pathway for exceptional participants to our internship and recruitment programs." },
 ];
 
+/**
+ * @name AnimatedText
+ * @description A component that animates text by fading in each character sequentially.
+ * This creates a dynamic and engaging "typing" effect for headlines.
+ */
 const AnimatedText = ({ text, className, delay = 0 }) => {
     return (
         <span className={className}>
             {text.split("").map((char, index) => (
-                <span key={index} className="animate-fade-in-up" style={{ animationDelay: `${delay + index * 0.05}s` }}>
-                    {char === " " ? "\u00A0" : char}
+                <span
+                  key={index}
+                  className="animate-fade-in-up"
+                  // Each character's animation is delayed slightly more than the last.
+                  style={{ animationDelay: `${delay + index * 0.05}s` }}
+                >
+                    {char === " " ? "\u00A0" : char} {/* Render non-breaking space for spaces */}
                 </span>
             ))}
         </span>
     );
 };
 
+/**
+ * @name useScrollReveal
+ * @description A custom React hook that uses the Intersection Observer API
+ * to add a 'visible' class to elements when they scroll into view.
+ * This is used for the fade-in-on-scroll effect for various sections.
+ */
 const useScrollReveal = () => {
   useEffect(() => {
     const revealElements = document.querySelectorAll('.scroll-reveal');
@@ -538,13 +671,20 @@ const useScrollReveal = () => {
                 entry.target.classList.add('visible');
             }
         });
-    }, { threshold: 0.2 });
+    }, { threshold: 0.2 }); // Trigger when 20% of the element is visible.
     revealElements.forEach(el => observer.observe(el));
+    // Cleanup function to unobserve elements when the component unmounts.
     return () => revealElements.forEach(el => observer.unobserve(el));
   }, []);
 };
 
+/**
+ * @name Header
+ * @description The main navigation header for the website.
+ * It becomes "sticky" and changes style slightly when the user scrolls down the page.
+ */
 function Header({ scrollTo, isScrolled }) {
+  // A function to create a ripple effect on button clicks.
   const createRipple = (event) => {
     const button = event.currentTarget;
     const circle = document.createElement("span");
@@ -561,13 +701,16 @@ function Header({ scrollTo, isScrolled }) {
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'top-4' : ''}`}>
       <nav className={`container mx-auto flex justify-between items-center transition-all duration-300 bg-black/30 backdrop-blur-md border border-slate-800 ${isScrolled ? 'rounded-full py-3 px-8 shadow-2xl shadow-teal-500/10' : 'py-4 px-6'}`}>
+        {/* Logo */}
         <div className="text-2xl font-bold text-white">Hemas <span className="text-teal-400" style={{textShadow: '0 0 8px rgba(20, 209, 190, 0.7)'}}>AI-thon</span></div>
+        {/* Navigation Links */}
         <div className="hidden md:flex items-center space-x-8">
           <a href="#about" onClick={(e) => scrollTo(e, 'about')} className="text-slate-300 hover:text-teal-400 transition-colors duration-300 font-medium">About</a>
           <a href="#pillars" onClick={(e) => scrollTo(e, 'pillars')} className="text-slate-300 hover:text-teal-400 transition-colors duration-300 font-medium">Tech Pillars</a>
           <a href="#timeline" onClick={(e) => scrollTo(e, 'timeline')} className="text-slate-300 hover:text-teal-400 transition-colors duration-300 font-medium">Timeline</a>
           <a href="#faq" onClick={(e) => scrollTo(e, 'faq')} className="text-slate-300 hover:text-teal-400 transition-colors duration-300 font-medium">FAQ</a>
         </div>
+        {/* Register Button */}
         <a href="#register" onClick={(e) => { scrollTo(e, 'register'); createRipple(e); }} className="group relative overflow-hidden bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-5 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg shadow-teal-500/20">
           <span className="button-glare"></span>
           Register Now
@@ -577,23 +720,31 @@ function Header({ scrollTo, isScrolled }) {
   );
 }
 
+/**
+ * @name Hero
+ * @description The main "hero" section at the top of the page.
+ * It features the main headline and a unique, interactive call-to-action button
+ * styled to look like a computer terminal.
+ */
 function Hero({ scrollTo }) {
   return (
     <section className="relative text-white pt-48 pb-24 md:pt-64 md:pb-40">
       <div className="container mx-auto px-6 text-center relative z-10">
+        {/* Animated headlines */}
         <h1 className="text-5xl md:text-7xl font-extrabold leading-tight tracking-tight">
           <AnimatedText text="Code the Unimaginable." className="block bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400" />
-          <AnimatedText text="Launch Your Future." className="block text-teal-400 glow-teal mt-2" delay={0.5} />
+          <AnimatedText text="Invent with Intelligence." className="block text-teal-400 title-glow mt-2" delay={0.5} />
         </h1>
-        <p className="mt-6 text-lg md:text-xl text-slate-300 max-w-3xl mx-auto animate-fade-in-up" style={{animationDelay: '1s'}}>
-          The Hemas AI-thon is not just a hackathon. It's a high-velocity launchpad for Sri Lanka's most ambitious student innovators. We provide the challenges, the tech, and the platform. You bring the vision.
+        {/* Introductory paragraph */}
+        <p className="mt-6 text-lg md:text-xl text-slate-200 max-w-3xl mx-auto animate-fade-in-up" style={{animationDelay: '1s'}}>
+          The Hemas AI-thon is your arena to innovate. We bring the real-world business challenges; you bring the code, the creativity, and the ambition to build what's next. This is more than a competition—it's your entry into the world of applied AI.
         </p>
-        <div className="animate-fade-in-up flex justify-center" style={{animationDelay: '1.2s'}}>
-          <button onClick={(e) => scrollTo(e, 'register')} className="group relative overflow-hidden mt-12 bg-gradient-to-r from-teal-500 to-cyan-500 hover:shadow-2xl hover:shadow-teal-500/40 text-white font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-110 shadow-xl">
-            <span className="button-glare"></span>
-            
-            Apply to Join the Vanguard
-          </button>
+        {/* The new creative call-to-action button */}
+        <div className="mt-12 animate-fade-in-up flex justify-center" style={{animationDelay: '1.2s'}}>
+            <button onClick={(e) => scrollTo(e, 'register')} className="futuristic-cta group">
+                <span className="cta-icon"><PowerIcon /></span>
+                <span className="cta-text">Register Now</span>
+            </button>
         </div>
       </div>
     </section>
@@ -605,8 +756,8 @@ function About() {
         <section className="py-20 bg-black/20">
             <div className="container mx-auto px-6">
                 <div className="text-center mb-16">
-                    <h2 className="text-4xl font-bold text-white scroll-reveal">The Art of the Possible</h2>
-                    <p className="mt-4 text-lg text-slate-400 max-w-4xl mx-auto scroll-reveal" style={{transitionDelay: '200ms'}}>We are strategically pivoting from a traditional hackathon to an innovative **"Discovery & Build"** framework. We immerse the brightest university talent in the world of Hemas—our businesses and strategic ambitions. Then, we challenge you to identify unique opportunities and design your own AI solutions, ensuring projects are not only technically brilliant but also rooted in genuine business insight.</p>
+                    <h2 className="text-4xl font-bold text-white scroll-reveal title-glow">The Art of the Possible</h2>
+                    <p className="mt-4 text-lg text-slate-300 max-w-4xl mx-auto scroll-reveal" style={{transitionDelay: '200ms'}}>We are strategically pivoting from a traditional hackathon to an innovative **"Discovery & Build"** framework. We immerse the brightest university talent in the world of Hemas—our businesses and strategic ambitions. Then, we challenge you to identify unique opportunities and design your own AI solutions, ensuring projects are not only technically brilliant but also rooted in genuine business insight.</p>
                 </div>
                 <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
                     <div className="glass-card rounded-2xl p-8 text-center scroll-reveal" style={{transitionDelay: '300ms'}}>
@@ -807,22 +958,35 @@ function Footer() {
     );
 }
 
-// --- MAIN APP COMPONENT ---
+/**
+ * @name App
+ * @description This is the root component of the entire application.
+ * It orchestrates the layout, brings together all the different sections (Header, Hero, About, etc.),
+ * and manages the overall state and logic, such as smooth scrolling and scroll-triggered animations.
+ */
 export default function App() {
+  // Refs to different sections for smooth scrolling.
   const refs = {
     pillars: useRef(null), about: useRef(null), timeline: useRef(null),
     faq: useRef(null), register: useRef(null),
   };
+
+  // Function to smoothly scroll to a section when a nav link is clicked.
   const scrollTo = (event, id) => {
     event.preventDefault();
     if (refs[id] && refs[id].current) {
         refs[id].current.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
+  // Static data for the registration form and QR code.
   const registrationFormUrl = "https://www.cognitoforms.com/HemasTransformation1/HemasAIthonOfficialTeamRegistration";
   const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(registrationFormUrl)}&bgcolor=111827&color=e2e8f0&qzone=1`;
+
+  // Initialize the scroll-reveal hook.
   useScrollReveal();
 
+  // State to track if the user has scrolled down the page.
   const [isScrolled, setIsScrolled] = useState(false);
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -832,6 +996,7 @@ export default function App() {
 
   return (
     <>
+      {/* Global styles and keyframe animations for the entire app */}
       <style>{`
         body {
             background-color: #0a101f;
@@ -889,13 +1054,57 @@ export default function App() {
           transition: left 0.75s;
         }
         .group:hover .button-glare { left: 150%; }
-        .glow-teal { text-shadow: 0 0 12px rgba(20, 209, 190, 0.8); }
+        
+        /* --- New Highlighting and Button Styles --- */
+
+        @keyframes pulse-glow {
+            0%, 100% { text-shadow: 0 0 15px rgba(20, 209, 190, 0.7), 0 0 25px rgba(20, 209, 190, 0.5); }
+            50% { text-shadow: 0 0 25px rgba(20, 209, 190, 1), 0 0 40px rgba(20, 209, 190, 0.7); }
+        }
+
+        .title-glow {
+            animation: pulse-glow 4s ease-in-out infinite;
+        }
+
+        .futuristic-cta {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            padding: 1rem 2.5rem;
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #e2e8f0; /* slate-200 */
+            background-color: transparent;
+            border: 2px solid #14d1be; /* teal-400 */
+            clip-path: polygon(90% 0, 100% 30%, 100% 100%, 10% 100%, 0 70%, 0 0);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .futuristic-cta:hover {
+            background-color: rgba(20, 209, 190, 0.1);
+            box-shadow: 0 0 25px rgba(20, 209, 190, 0.5);
+            color: #fff;
+        }
+        
+        .futuristic-cta .cta-icon {
+            margin-right: 0.75rem;
+            transition: transform 0.3s ease;
+        }
+
+        .futuristic-cta:hover .cta-icon {
+            transform: rotate(360deg) scale(1.1);
+        }
       `}</style>
+      {/* Main container for the app */}
       <div className="text-slate-300 antialiased overflow-x-hidden">
+        {/* The main background animation component */}
         <FuturisticAiBackground />
         
+        {/* The site header */}
         <Header scrollTo={scrollTo} isScrolled={isScrolled} />
 
+        {/* The main content area where all sections are rendered */}
         <main className="relative z-10">
           <Hero scrollTo={scrollTo} />
           <div ref={refs.about}><About /></div>
@@ -907,6 +1116,7 @@ export default function App() {
           <Registration qrCodeUrl={qrCodeApiUrl} formUrl={registrationFormUrl} ref={refs.register} />
         </main>
         
+        {/* The site footer */}
         <Footer />
       </div>
     </>
