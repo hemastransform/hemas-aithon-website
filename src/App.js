@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
-// --- SVG Icon Components for a futuristic feel ---
+// --- Enhanced SVG Icon Components ---
 const IconBrainCircuit = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8"><path d="M12 2a10 10 0 0 0-10 10c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.1-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.1.39-1.99 1.03-2.69a3.6 3.6 0 0 1 .1-2.64s.84-.27 2.75 1.02a9.58 9.58 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.4.1 2.64.64.7 1.03 1.6 1.03 2.69 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.73c0 .27.16.59.67.5A10 10 0 0 0 22 12 10 10 0 0 0 12 2Z"/></svg>;
 const IconAutomation = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8"><path d="M12 8V4H8"/><rect x="4" y="12" width="8" height="8" rx="1"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="M17 12h-2"/><path d="M17 22v-4h-2"/><path d="M12 17H4"/><path d="M12 12v-2h4v-2h-4V4H8"/></svg>;
 const IconExperience = () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>;
@@ -23,24 +23,24 @@ const scheduleData = [
 ];
 
 const faqData = [
-  {
-    question: "What is the 'Discovery & Build' framework?",
-    answer: "Instead of giving you a pre-defined problem, we immerse you in our business challenges. You get the 'structured freedom' to discover an opportunity and design your own AI solution, making your project highly relevant and innovative.",
-  },
-  {
-    question: "What is the team size?",
-    answer: "Teams can have up to 5 members. You must register as a team. The registration form will require the name and NIC for each member.",
-  },
-  {
-    question: "What kind of solutions are you looking for?",
-    answer: "We are looking for high-potential, working AI prototypes that directly address challenges or opportunities within Hemas's Healthcare, Consumer Brands, and Mobility sectors, based on the Technology Pillars.",
-  },
-  {
-    question: "What will I gain from participating?",
-    answer: "You will tackle real-world business problems, get hands-on experience with cutting-edge tech, and get noticed by our senior leadership. This is a direct pathway for exceptional participants to our internship and recruitment programs.",
-  },
+  { question: "What is the 'Discovery & Build' framework?", answer: "Instead of giving you a pre-defined problem, we immerse you in our business challenges. You get the 'structured freedom' to discover an opportunity and design your own AI solution, making your project highly relevant and innovative." },
+  { question: "What is the team size?", answer: "Teams can have up to 5 members. You must register as a team. The registration form will require the name and NIC for each member." },
+  { question: "What kind of solutions are you looking for?", answer: "We are looking for high-potential, working AI prototypes that directly address challenges or opportunities within Hemas's Healthcare, Consumer Brands, and Mobility sectors, based on the Technology Pillars." },
+  { question: "What will I gain from participating?", answer: "You will tackle real-world business problems, get hands-on experience with cutting-edge tech, and get noticed by our senior leadership. This is a direct pathway for exceptional participants to our internship and recruitment programs." },
 ];
 
+// --- Helper Components ---
+const AnimatedText = ({ text, className }) => {
+    return (
+        <span className={className}>
+            {text.split("").map((char, index) => (
+                <span key={index} className="animate-fade-in-up" style={{ animationDelay: `${index * 0.05}s` }}>
+                    {char === " " ? "\u00A0" : char}
+                </span>
+            ))}
+        </span>
+    );
+};
 
 // --- Main App Component ---
 export default function App() {
@@ -57,29 +57,61 @@ export default function App() {
     refs[id].current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // The new Cognito Forms registration URL
   const registrationFormUrl = "https://www.cognitoforms.com/HemasTransformation1/HemasAIthonOfficialTeamRegistration";
   const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(registrationFormUrl)}&bgcolor=0a101f&color=e2e8f0&qzone=1`;
 
   return (
-    <div style={{backgroundColor: '#0a101f', fontFamily: "'Poppins', sans-serif"}} className="text-slate-300 antialiased">
-      {/* Background decorative elements */}
-      <div className="absolute top-0 left-0 w-full h-full bg-grid-pattern opacity-10 z-0"></div>
-      
-      <Header scrollTo={scrollTo} />
+    <>
+      <style>{`
+        @keyframes aurora {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .aurora-bg {
+          background: radial-gradient(ellipse at top, rgba(20, 209, 190, 0.15), transparent),
+                      radial-gradient(ellipse at bottom, rgba(255, 118, 1, 0.15), transparent);
+          animation: aurora 15s ease infinite;
+        }
+        .glass-card {
+          background: rgba(17, 24, 39, 0.6);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+          border-color: rgba(20, 209, 190, 0.5);
+          box-shadow: 0 0 20px rgba(20, 209, 190, 0.1);
+        }
+        @keyframes fade-in-up {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up {
+          display: inline-block;
+          opacity: 0;
+          animation: fade-in-up 0.5s forwards;
+        }
+      `}</style>
+      <div style={{backgroundColor: '#0a101f', fontFamily: "'Poppins', sans-serif"}} className="text-slate-300 antialiased overflow-x-hidden">
+        <div className="fixed top-0 left-0 w-full h-full aurora-bg z-0"></div>
+        
+        <Header scrollTo={scrollTo} />
 
-      <main className="relative z-10">
-        <Hero scrollTo={scrollTo} />
-        <div ref={refs.about}><About /></div>
-        <div ref={refs.pillars}><TechPillars /></div>
-        <div ref={refs.timeline}><CompetitionTimeline /></div>
-        <Prizes />
-        <div ref={refs.faq}><FAQ /></div>
-        <Registration qrCodeUrl={qrCodeApiUrl} formUrl={registrationFormUrl} ref={refs.register} />
-      </main>
-      
-      <Footer />
-    </div>
+        <main className="relative z-10">
+          <Hero scrollTo={scrollTo} />
+          <div ref={refs.about}><About /></div>
+          <div ref={refs.pillars}><TechPillars /></div>
+          <div ref={refs.timeline}><CompetitionTimeline /></div>
+          <Prizes />
+          <div ref={refs.faq}><FAQ /></div>
+          <Registration qrCodeUrl={qrCodeApiUrl} formUrl={registrationFormUrl} ref={refs.register} />
+        </main>
+        
+        <Footer />
+      </div>
+    </>
   );
 }
 
@@ -106,19 +138,20 @@ function Header({ scrollTo }) {
 
 function Hero({ scrollTo }) {
   return (
-    <section className="relative text-white py-24 md:py-40 overflow-hidden">
-      <div className="absolute inset-0 bg-hero-pattern opacity-20"></div>
+    <section className="relative text-white py-24 md:py-40">
       <div className="container mx-auto px-6 text-center relative z-10">
         <h1 className="text-5xl md:text-7xl font-extrabold leading-tight tracking-tight">
-          <span className="block bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Code the Unimaginable.</span>
-          <span className="block text-teal-400 glow-teal mt-2">Launch Your Future.</span>
+          <AnimatedText text="Code the Unimaginable." className="block bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400" />
+          <AnimatedText text="Launch Your Future." className="block text-teal-400 glow-teal mt-2" />
         </h1>
-        <p className="mt-6 text-lg md:text-xl text-slate-300 max-w-3xl mx-auto">
+        <p className="mt-6 text-lg md:text-xl text-slate-300 max-w-3xl mx-auto animate-fade-in-up" style={{animationDelay: '1s'}}>
           The Hemas AI-thon is not just a hackathon. It's a high-velocity launchpad for Sri Lanka's most ambitious student innovators. We provide the challenges, the tech, and the platform. You bring the vision.
         </p>
-        <button onClick={(e) => scrollTo(e, 'register')} className="mt-12 bg-gradient-to-r from-teal-500 to-cyan-500 hover:shadow-2xl hover:shadow-teal-500/40 text-white font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-110 shadow-xl">
-          Apply to Join the Vanguard
-        </button>
+        <div className="animate-fade-in-up" style={{animationDelay: '1.2s'}}>
+          <button onClick={(e) => scrollTo(e, 'register')} className="mt-12 bg-gradient-to-r from-teal-500 to-cyan-500 hover:shadow-2xl hover:shadow-teal-500/40 text-white font-bold py-4 px-10 rounded-full text-lg transition-all duration-300 transform hover:scale-110 shadow-xl">
+            Apply to Join the Vanguard
+          </button>
+        </div>
       </div>
     </section>
   );
@@ -129,15 +162,15 @@ function About() {
         <section className="py-20 bg-black/20">
             <div className="container mx-auto px-6">
                 <div className="text-center mb-16">
-                    <h2 className="text-4xl font-bold text-white">From Ideas to Implementation.</h2>
-                    <p className="mt-4 text-lg text-slate-400 max-w-4xl mx-auto">We are strategically pivoting from a traditional hackathon to an innovative **"Discovery & Build"** framework. We will first immerse the brightest university talent in the world of Hemas—our businesses and strategic ambitions. Then, we will challenge you to identify unique opportunities and design your own AI solutions, ensuring projects are not only technically brilliant but also rooted in genuine business insight.</p>
+                    <h2 className="text-4xl font-bold text-white">The Art of the Possible</h2>
+                    <p className="mt-4 text-lg text-slate-400 max-w-4xl mx-auto">We are strategically pivoting from a traditional hackathon to an innovative **"Discovery & Build"** framework. We immerse the brightest university talent in the world of Hemas—our businesses and strategic ambitions. Then, we challenge you to identify unique opportunities and design your own AI solutions, ensuring projects are not only technically brilliant but also rooted in genuine business insight.</p>
                 </div>
                 <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-                    <div className="glass-card rounded-2xl p-8 text-center transform hover:-translate-y-2 transition-transform duration-300 hover:shadow-xl hover:shadow-teal-500/10">
+                    <div className="glass-card rounded-2xl p-8 text-center">
                         <h3 className="text-2xl font-bold text-teal-400 mb-4">Structured Freedom</h3>
                         <p className="text-slate-300">Our core philosophy is to provide a 'scaffolding' that guides your creativity towards areas of high business value, while giving you complete freedom to build what you envision within that structure.</p>
                     </div>
-                    <div className="glass-card rounded-2xl p-8 text-center transform hover:-translate-y-2 transition-transform duration-300 hover:shadow-xl hover:shadow-orange-500/10">
+                    <div className="glass-card rounded-2xl p-8 text-center">
                         <h3 className="text-2xl font-bold text-orange-400 mb-4">Vision-First, Not Pain-Point First</h3>
                         <p className="text-slate-300">You won't be solving small, isolated problems. You'll be tackling strategic challenges derived from the future ambitions of our business units, making your work truly impactful.</p>
                     </div>
@@ -175,35 +208,17 @@ function CompetitionTimeline() {
             <div className="container mx-auto px-6">
                 <h2 className="text-4xl font-bold text-center text-white mb-16">Competition Timeline</h2>
                 <div className="relative max-w-4xl mx-auto">
-                    {/* Vertical line */}
                     <div className="absolute left-4 md:left-1/2 w-0.5 h-full bg-slate-700"></div>
                     {scheduleData.map((item, index) => (
                         <div key={index} className="relative mb-12 flex items-center w-full">
                             <div className={`hidden md:block w-1/2 ${index % 2 === 0 ? 'pr-8 text-right' : 'pl-8 text-left'}`}>
-                                {index % 2 === 0 && (
-                                    <>
-                                        <h3 className="text-xl font-bold text-white">{item.title}</h3>
-                                        <p className="text-orange-400">{item.date}</p>
-                                        <p className="text-slate-400 mt-2 text-sm">{item.description}</p>
-                                    </>
-                                )}
+                                {index % 2 === 0 && ( <> <h3 className="text-xl font-bold text-white">{item.title}</h3> <p className="text-orange-400">{item.date}</p> <p className="text-slate-400 mt-2 text-sm">{item.description}</p> </> )}
                             </div>
-                            <div className="absolute left-4 md:left-1/2 transform -translate-x-1/2 w-8 h-8 bg-teal-500 rounded-full border-4 border-gray-900 flex items-center justify-center font-bold text-white z-10">
-                                {index + 1}
-                            </div>
+                            <div className="absolute left-4 md:left-1/2 transform -translate-x-1/2 w-8 h-8 bg-teal-500 rounded-full border-4 border-gray-900 flex items-center justify-center font-bold text-white z-10"> {index + 1} </div>
                             <div className={`w-full md:w-1/2 pl-12 md:pl-0 ${index % 2 !== 0 ? 'md:pr-8 md:text-right' : 'md:pl-8 md:text-left'}`}>
-                                <div className="md:hidden mb-2">
-                                    <h3 className="text-xl font-bold text-white">{item.title}</h3>
-                                    <p className="text-orange-400">{item.date}</p>
-                                </div>
+                                <div className="md:hidden mb-2"> <h3 className="text-xl font-bold text-white">{item.title}</h3> <p className="text-orange-400">{item.date}</p> </div>
                                 <p className="text-slate-400 mt-2 text-sm md:hidden">{item.description}</p>
-                                {index % 2 !== 0 && (
-                                     <div className="hidden md:block">
-                                        <h3 className="text-xl font-bold text-white">{item.title}</h3>
-                                        <p className="text-orange-400">{item.date}</p>
-                                        <p className="text-slate-400 mt-2 text-sm">{item.description}</p>
-                                    </div>
-                                )}
+                                {index % 2 !== 0 && ( <div className="hidden md:block"> <h3 className="text-xl font-bold text-white">{item.title}</h3> <p className="text-orange-400">{item.date}</p> <p className="text-slate-400 mt-2 text-sm">{item.description}</p> </div> )}
                             </div>
                         </div>
                     ))}
@@ -220,20 +235,9 @@ function Prizes() {
         <h2 className="text-4xl font-bold text-white mb-4">The Rewards for Visionaries</h2>
         <p className="text-center text-slate-400 mb-12 max-w-3xl mx-auto">We're rewarding groundbreaking ideas and flawless execution with a significant prize pool and unparalleled opportunities.</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-            <div className="glass-card rounded-2xl p-8">
-                <p className="text-orange-400 font-bold text-lg">RUNNER-UP</p>
-                <h3 className="text-4xl font-bold text-white mt-2">LKR 100,000</h3>
-            </div>
-            <div className="glass-card rounded-2xl p-8 border-2 border-teal-400 shadow-2xl shadow-teal-500/20 transform scale-105">
-                <p className="text-teal-400 font-bold text-lg">GRAND PRIZE</p>
-                <h3 className="text-5xl font-extrabold text-white mt-2">LKR 200,000</h3>
-                <p className="text-slate-300 mt-1">AI-thon Champions</p>
-            </div>
-            <div className="glass-card rounded-2xl p-8">
-                <p className="text-orange-400 font-bold text-lg">SPECIAL AWARD</p>
-                <h3 className="text-4xl font-bold text-white mt-2">LKR 200,000</h3>
-                <p className="text-slate-300 mt-1">Most Innovative Prototype</p>
-            </div>
+            <div className="glass-card rounded-2xl p-8"> <p className="text-orange-400 font-bold text-lg">RUNNER-UP</p> <h3 className="text-4xl font-bold text-white mt-2">LKR 100,000</h3> </div>
+            <div className="glass-card rounded-2xl p-8 border-2 border-teal-400 shadow-2xl shadow-teal-500/20 transform scale-105"> <p className="text-teal-400 font-bold text-lg">GRAND PRIZE</p> <h3 className="text-5xl font-extrabold text-white mt-2">LKR 200,000</h3> <p className="text-slate-300 mt-1">AI-thon Champions</p> </div>
+            <div className="glass-card rounded-2xl p-8"> <p className="text-orange-400 font-bold text-lg">SPECIAL AWARD</p> <h3 className="text-4xl font-bold text-white mt-2">LKR 200,000</h3> <p className="text-slate-300 mt-1">Most Innovative Prototype</p> </div>
         </div>
       </div>
     </section>
@@ -243,18 +247,16 @@ function Prizes() {
 function FaqItem({ item }) {
   const [isOpen, setIsOpen] = useState(false);
   return (
-    <div className="border-b border-slate-700">
-      <button onClick={() => setIsOpen(!isOpen)} className="w-full text-left py-4 flex justify-between items-center">
-        <span className="text-lg font-medium text-white">{item.question}</span>
+    <div className="border-b border-slate-700/50">
+      <button onClick={() => setIsOpen(!isOpen)} className="w-full text-left py-4 flex justify-between items-center transition-colors hover:text-teal-400">
+        <span className="text-lg font-medium">{item.question}</span>
         <span className={`transform transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="stroke-current text-teal-400"><path d="M6 9L12 15L18 9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"></path></svg>
         </span>
       </button>
-      {isOpen && (
-        <div className="pb-4 pr-8 text-gray-400">
-          {item.answer}
-        </div>
-      )}
+      <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-96' : 'max-h-0'}`}>
+        <div className="pb-4 pr-8 text-slate-400"> {item.answer} </div>
+      </div>
     </div>
   );
 }
@@ -263,11 +265,9 @@ function FAQ() {
   return (
     <section className="py-20 bg-black/20">
       <div className="container mx-auto px-6">
-        <h2 className="text-4xl font-bold text-center text-white mb-12">Frequently Asked Questions</h2>
+        <h2 className="text-4xl font-bold text-center text-white mb-12">Your Questions, Answered.</h2>
         <div className="max-w-3xl mx-auto p-4 rounded-lg glass-card">
-          {faqData.map((item, index) => (
-            <FaqItem key={index} item={item} />
-          ))}
+          {faqData.map((item, index) => ( <FaqItem key={index} item={item} /> ))}
         </div>
       </div>
     </section>
@@ -282,16 +282,9 @@ const Registration = React.forwardRef(({ qrCodeUrl, formUrl }, ref) => {
                     <div className="grid md:grid-cols-2 gap-8 items-center">
                         <div>
                             <h2 className="text-4xl font-bold text-white">Your Mission Starts Now.</h2>
-                            <p className="mt-4 text-lg text-slate-300">
-                                Assemble your team of up to 5 innovators. Scan the QR code or click the button to access the official registration portal. Spots are limited.
-                            </p>
-                            <a
-                                href={formUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-8 inline-flex items-center justify-center w-full md:w-auto py-4 px-8 border border-transparent rounded-full shadow-sm text-lg font-medium text-white bg-teal-500 hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-transform transform hover:scale-105"
-                            >
-                                Open Registration Form
+                            <p className="mt-4 text-lg text-slate-300"> Assemble your team of up to 5 innovators. Scan the QR code or click the button to access the official registration portal. Spots are limited. </p>
+                            <a href={formUrl} target="_blank" rel="noopener noreferrer" className="mt-8 inline-flex items-center justify-center w-full md:w-auto py-4 px-8 border border-transparent rounded-full shadow-lg shadow-teal-500/30 text-lg font-medium text-white bg-teal-500 hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-transform transform hover:scale-105">
+                                Open Registration Portal
                                 <span className="ml-3"> <IconExternalLink /> </span>
                             </a>
                         </div>
