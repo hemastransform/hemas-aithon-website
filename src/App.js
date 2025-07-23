@@ -15,6 +15,12 @@ const techPillars = [
     { icon: <IconFoundation />, title: "Foundational Inputs & Methodology", description: "Utilize IoT data from physical sensors to feed real-time information into your AI. Embrace 'Vibe Coding' for rapid, AI-assisted prototyping.", color: "rose" },
 ];
 
+const whyJoinData = [
+    { title: "Build What Matters", description: "Move beyond theory. Tackle real-world challenges from Hemas's Healthcare, Consumer, and Mobility sectors. Your code could become a high-potential prototype that shapes the future of our business.", size: "large" },
+    { title: "Launch Your Career", description: "This is more than a competition—it's a talent pipeline. Impress us, and you'll be on the fast track for internships and recruitment into Hemas's most critical tech roles.", size: "small" },
+    { title: "Wield Cutting-Edge Tech", description: "Get hands-on with the tools that are defining the future. From Generative AI and agentic systems to IoT and AR/VR, you'll be working at the frontier of technology.", size: "small" },
+];
+
 const scheduleData = [
     { phase: "Phase 1", date: "Jul 28 - Aug 22", title: "University Outreach & Applications", description: "The official application process is launched. Aspiring participants can apply to be part of the initial cohort." },
     { phase: "Phase 2", date: "Aug 18 - Sep 5", title: "Participant Selection", description: "Applications are reviewed, and the top 50 students are selected and invited to the Hemas Immersion Day." },
@@ -29,17 +35,33 @@ const faqData = [
   { question: "What will I gain from participating?", answer: "You will tackle real-world business problems, get hands-on experience with cutting-edge tech, and get noticed by our senior leadership. This is a direct pathway for exceptional participants to our internship and recruitment programs." },
 ];
 
-// --- Helper Components ---
-const AnimatedText = ({ text, className }) => {
+// --- Helper & Animation Components ---
+const AnimatedText = ({ text, className, delay = 0 }) => {
     return (
         <span className={className}>
             {text.split("").map((char, index) => (
-                <span key={index} className="animate-fade-in-up" style={{ animationDelay: `${index * 0.05}s` }}>
+                <span key={index} className="animate-fade-in-up" style={{ animationDelay: `${delay + index * 0.05}s` }}>
                     {char === " " ? "\u00A0" : char}
                 </span>
             ))}
         </span>
     );
+};
+
+const useMousePosition = () => {
+  const [mousePosition, setMousePosition] = useState({ x: null, y: null });
+
+  useEffect(() => {
+    const updateMousePosition = ev => {
+      setMousePosition({ x: ev.clientX, y: ev.clientY });
+    };
+    window.addEventListener('mousemove', updateMousePosition);
+    return () => {
+      window.removeEventListener('mousemove', updateMousePosition);
+    };
+  }, []);
+
+  return mousePosition;
 };
 
 // --- Main App Component ---
@@ -59,49 +81,55 @@ export default function App() {
 
   const registrationFormUrl = "https://www.cognitoforms.com/HemasTransformation1/HemasAIthonOfficialTeamRegistration";
   const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(registrationFormUrl)}&bgcolor=0a101f&color=e2e8f0&qzone=1`;
+  
+  const { x, y } = useMousePosition();
 
   return (
     <>
       <style>{`
-        @keyframes aurora {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
+        @keyframes aurora { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         .aurora-bg {
-          background: radial-gradient(ellipse at top, rgba(20, 209, 190, 0.15), transparent),
-                      radial-gradient(ellipse at bottom, rgba(255, 118, 1, 0.15), transparent);
-          animation: aurora 15s ease infinite;
+          background: radial-gradient(ellipse at top, rgba(20, 209, 190, 0.1), transparent 50%),
+                      radial-gradient(ellipse at bottom, rgba(255, 118, 1, 0.1), transparent 50%);
+          animation: aurora 20s ease infinite;
         }
         .glass-card {
           background: rgba(17, 24, 39, 0.6);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
+          backdrop-filter: blur(16px) saturate(180%);
+          -webkit-backdrop-filter: blur(16px) saturate(180%);
           border: 1px solid rgba(255, 255, 255, 0.1);
           transition: all 0.3s ease;
+          position: relative;
+          overflow: hidden;
         }
-        .glass-card:hover {
-          border-color: rgba(20, 209, 190, 0.5);
-          box-shadow: 0 0 20px rgba(20, 209, 190, 0.1);
-        }
-        @keyframes fade-in-up {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in-up {
-          display: inline-block;
+        .glass-card .spotlight {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100%;
+          background: radial-gradient(circle at var(--x) var(--y), rgba(20, 209, 190, 0.25), transparent 40%);
           opacity: 0;
-          animation: fade-in-up 0.5s forwards;
+          transition: opacity 0.3s ease;
         }
+        .glass-card:hover .spotlight { opacity: 1; }
+        @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in-up { display: inline-block; opacity: 0; animation: fade-in-up 0.6s forwards; }
+        .scroll-reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
+        .scroll-reveal.visible { opacity: 1; transform: translateY(0); }
       `}</style>
       <div style={{backgroundColor: '#0a101f', fontFamily: "'Poppins', sans-serif"}} className="text-slate-300 antialiased overflow-x-hidden">
         <div className="fixed top-0 left-0 w-full h-full aurora-bg z-0"></div>
+        <div className="fixed top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/hexellence.png')] opacity-[0.03] z-0"></div>
+        <div className="fixed top-0 left-0 w-screen h-screen pointer-events-none z-20" style={{ background: `radial-gradient(600px at ${x}px ${y}px, rgba(29, 78, 216, 0.15), transparent 80%)`}}></div>
         
         <Header scrollTo={scrollTo} />
 
         <main className="relative z-10">
           <Hero scrollTo={scrollTo} />
           <div ref={refs.about}><About /></div>
+          <WhyJoin />
           <div ref={refs.pillars}><TechPillars /></div>
           <div ref={refs.timeline}><CompetitionTimeline /></div>
           <Prizes />
@@ -142,7 +170,7 @@ function Hero({ scrollTo }) {
       <div className="container mx-auto px-6 text-center relative z-10">
         <h1 className="text-5xl md:text-7xl font-extrabold leading-tight tracking-tight">
           <AnimatedText text="Code the Unimaginable." className="block bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400" />
-          <AnimatedText text="Launch Your Future." className="block text-teal-400 glow-teal mt-2" />
+          <AnimatedText text="Launch Your Future." className="block text-teal-400 glow-teal mt-2" delay={0.5} />
         </h1>
         <p className="mt-6 text-lg md:text-xl text-slate-300 max-w-3xl mx-auto animate-fade-in-up" style={{animationDelay: '1s'}}>
           The Hemas AI-thon is not just a hackathon. It's a high-velocity launchpad for Sri Lanka's most ambitious student innovators. We provide the challenges, the tech, and the platform. You bring the vision.
@@ -180,9 +208,30 @@ function About() {
     );
 }
 
+function WhyJoin() {
+    return (
+        <section className="py-20">
+            <div className="container mx-auto px-6">
+                <div className="text-center mb-16">
+                    <h2 className="text-4xl font-bold text-white">This is Your Gateway.</h2>
+                    <p className="mt-4 text-lg text-slate-400">Why this is the only tech event that matters for your career this year.</p>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {whyJoinData.map((item, index) => (
+                        <div key={index} className={`glass-card rounded-2xl p-8 text-left ${item.size === 'large' ? 'lg:col-span-2' : ''}`}>
+                            <h3 className="text-2xl font-bold text-teal-400 mb-4">{item.title}</h3>
+                            <p className="text-slate-300 text-lg">{item.description}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+}
+
 function TechPillars() {
   return (
-    <section className="py-20">
+    <section className="py-20 bg-black/20">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-white">Explore the Technology Pillars</h2>
@@ -191,6 +240,7 @@ function TechPillars() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {techPillars.map((pillar) => (
             <div key={pillar.title} className={`glass-card rounded-2xl p-6 flex flex-col items-center text-center border-t-4 border-${pillar.color}-500`}>
+              <div className="spotlight"></div>
               <div className={`text-${pillar.color}-400 mb-4`}>{pillar.icon}</div>
               <h3 className="text-xl font-bold text-white mb-3">{pillar.title}</h3>
               <p className="text-slate-400 text-sm flex-grow">{pillar.description}</p>
@@ -204,7 +254,7 @@ function TechPillars() {
 
 function CompetitionTimeline() {
     return (
-        <section className="py-20 bg-black/20">
+        <section className="py-20">
             <div className="container mx-auto px-6">
                 <h2 className="text-4xl font-bold text-center text-white mb-16">Competition Timeline</h2>
                 <div className="relative max-w-4xl mx-auto">
@@ -230,7 +280,7 @@ function CompetitionTimeline() {
 
 function Prizes() {
   return (
-    <section id="prizes" className="py-20">
+    <section id="prizes" className="py-20 bg-black/20">
       <div className="container mx-auto px-6 text-center">
         <h2 className="text-4xl font-bold text-white mb-4">The Rewards for Visionaries</h2>
         <p className="text-center text-slate-400 mb-12 max-w-3xl mx-auto">We're rewarding groundbreaking ideas and flawless execution with a significant prize pool and unparalleled opportunities.</p>
@@ -255,7 +305,7 @@ function FaqItem({ item }) {
         </span>
       </button>
       <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-96' : 'max-h-0'}`}>
-        <div className="pb-4 pr-8 text-slate-400"> {item.answer} </div>
+        <div className="pb-4 pr-8 pt-2 text-slate-400"> {item.answer} </div>
       </div>
     </div>
   );
@@ -263,7 +313,7 @@ function FaqItem({ item }) {
 
 function FAQ() {
   return (
-    <section className="py-20 bg-black/20">
+    <section className="py-20">
       <div className="container mx-auto px-6">
         <h2 className="text-4xl font-bold text-center text-white mb-12">Your Questions, Answered.</h2>
         <div className="max-w-3xl mx-auto p-4 rounded-lg glass-card">
