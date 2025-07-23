@@ -16,9 +16,9 @@ const techPillars = [
 ];
 
 const whyJoinData = [
-    { title: "Build What Matters", description: "Tackle real-world challenges from Hemas's Healthcare, Consumer, and Mobility sectors. Your code could become a high-potential prototype that shapes our future." },
-    { title: "Launch Your Career", description: "This is a direct talent pipeline. Impress us, and you'll be on the fast track for internships and recruitment into Hemas's most critical tech roles." },
-    { title: "Wield Cutting-Edge Tech", description: "Get hands-on with the tools defining the future—Generative AI, agentic systems, IoT, and AR/VR, all backed by the power of Microsoft Azure." },
+    { title: "Build What Matters", description: "Tackle real-world challenges from Hemas's Healthcare, Consumer, and Mobility sectors. Your code could become a high-potential prototype that shapes our future.", size: "large" },
+    { title: "Launch Your Career", description: "This is a direct talent pipeline. Impress us, and you'll be on the fast track for internships and recruitment into Hemas's most critical tech roles.", size: "small" },
+    { title: "Wield Cutting-Edge Tech", description: "Get hands-on with the tools defining the future—Generative AI, agentic systems, IoT, and AR/VR, all backed by the power of Microsoft Azure.", size: "small" },
 ];
 
 const scheduleData = [
@@ -46,6 +46,22 @@ const AnimatedText = ({ text, className, delay = 0 }) => {
             ))}
         </span>
     );
+};
+
+const useMousePosition = () => {
+  const [mousePosition, setMousePosition] = useState({ x: null, y: null });
+
+  useEffect(() => {
+    const updateMousePosition = ev => {
+      setMousePosition({ x: ev.clientX, y: ev.clientY });
+    };
+    window.addEventListener('mousemove', updateMousePosition);
+    return () => {
+      window.removeEventListener('mousemove', updateMousePosition);
+    };
+  }, []);
+
+  return mousePosition;
 };
 
 const useScrollReveal = () => {
@@ -77,6 +93,7 @@ export default function App() {
   };
   const registrationFormUrl = "https://www.cognitoforms.com/HemasTransformation1/HemasAIthonOfficialTeamRegistration";
   const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(registrationFormUrl)}&bgcolor=111827&color=e2e8f0&qzone=1`;
+  const { x, y } = useMousePosition();
   useScrollReveal();
 
   const [isScrolled, setIsScrolled] = useState(false);
@@ -136,6 +153,7 @@ export default function App() {
       <div style={{backgroundColor: '#0a101f', fontFamily: "'Poppins', sans-serif"}} className="text-slate-300 antialiased overflow-x-hidden">
         <div className="fixed top-0 left-0 w-full h-full aurora-bg z-0"></div>
         <div className="fixed top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/hexellence.png')] opacity-[0.03] z-0"></div>
+        <div className="fixed top-0 left-0 w-screen h-screen pointer-events-none z-20" style={{ background: `radial-gradient(600px at ${x}px ${y}px, rgba(29, 78, 216, 0.15), transparent 80%)`}}></div>
         
         <Header scrollTo={scrollTo} isScrolled={isScrolled} />
 
@@ -244,19 +262,15 @@ function WhyJoin() {
           <h2 className="text-4xl font-bold text-white scroll-reveal">This is Your Gateway.</h2>
           <p className="mt-4 text-lg text-slate-400 scroll-reveal" style={{transitionDelay: '200ms'}}>Why this is the only tech event that matters for your career this year.</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 glass-card rounded-2xl p-8 text-left flex flex-col justify-center scroll-reveal" style={{transitionDelay: '300ms'}}>
-                <h3 className="text-2xl font-bold text-teal-400 mb-4">{whyJoinData[0].title}</h3>
-                <p className="text-slate-300 text-lg">{whyJoinData[0].description}</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {whyJoinData.map((item, index) => (
+            <div key={index} className={`glass-card rounded-2xl p-8 text-center flex flex-col justify-center items-center scroll-reveal`} style={{transitionDelay: `${300 + index * 100}ms`}}>
+              <div>
+                <h3 className="text-2xl font-bold text-teal-400 mb-4">{item.title}</h3>
+                <p className="text-slate-300 text-lg">{item.description}</p>
+              </div>
             </div>
-            <div className="glass-card rounded-2xl p-8 text-left flex flex-col justify-center scroll-reveal" style={{transitionDelay: '400ms'}}>
-                <h3 className="text-2xl font-bold text-teal-400 mb-4">{whyJoinData[1].title}</h3>
-                <p className="text-slate-300 text-lg">{whyJoinData[1].description}</p>
-            </div>
-            <div className="lg:col-span-3 glass-card rounded-2xl p-8 text-left flex flex-col justify-center scroll-reveal" style={{transitionDelay: '500ms'}}>
-                <h3 className="text-2xl font-bold text-teal-400 mb-4">{whyJoinData[2].title}</h3>
-                <p className="text-slate-300 text-lg">{whyJoinData[2].description}</p>
-            </div>
+          ))}
         </div>
       </div>
     </section>
