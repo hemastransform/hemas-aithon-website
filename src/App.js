@@ -56,7 +56,7 @@ const ParticleBackground = () => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth;
-        canvas.height = document.body.scrollHeight; // Set height to full scroll height
+        canvas.height = document.body.scrollHeight;
 
         let particlesArray = [];
 
@@ -68,12 +68,8 @@ const ParticleBackground = () => {
 
         class Particle {
             constructor(x, y, directionX, directionY, size, color) {
-                this.x = x;
-                this.y = y;
-                this.directionX = directionX;
-                this.directionY = directionY;
-                this.size = size;
-                this.color = color;
+                this.x = x; this.y = y; this.directionX = directionX;
+                this.directionY = directionY; this.size = size; this.color = color;
             }
             draw() {
                 ctx.beginPath();
@@ -96,7 +92,6 @@ const ParticleBackground = () => {
                         if (this.y > mouse.current.y && this.y < canvas.height) this.y += 1;
                     }
                 }
-
                 this.x += this.directionX;
                 this.y += this.directionY;
                 this.draw();
@@ -152,10 +147,12 @@ const ParticleBackground = () => {
             init();
         };
         
-        // Use a timeout to ensure the body has rendered and scrollHeight is accurate
         setTimeout(() => {
             handleResize();
         }, 100);
+        
+        init();
+        animate(); // This line was missing and is now restored.
 
         window.addEventListener('resize', handleResize);
 
@@ -365,15 +362,19 @@ function WhyJoin() {
           <h2 className="text-4xl font-bold text-white scroll-reveal">This is Your Gateway.</h2>
           <p className="mt-4 text-lg text-slate-400 scroll-reveal" style={{transitionDelay: '200ms'}}>Why this is the only tech event that matters for your career this year.</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {whyJoinData.map((item, index) => (
-            <div key={index} className={`glass-card rounded-2xl p-8 text-center flex flex-col justify-center items-center scroll-reveal`} style={{transitionDelay: `${300 + index * 100}ms`}}>
-              <div>
-                <h3 className="text-2xl font-bold text-teal-400 mb-4">{item.title}</h3>
-                <p className="text-slate-300 text-lg">{item.description}</p>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 glass-card rounded-2xl p-8 text-left flex flex-col justify-center scroll-reveal" style={{transitionDelay: '300ms'}}>
+                <h3 className="text-2xl font-bold text-teal-400 mb-4">{whyJoinData[0].title}</h3>
+                <p className="text-slate-300 text-lg">{whyJoinData[0].description}</p>
             </div>
-          ))}
+            <div className="glass-card rounded-2xl p-8 text-left flex flex-col justify-center scroll-reveal" style={{transitionDelay: '400ms'}}>
+                <h3 className="text-2xl font-bold text-teal-400 mb-4">{whyJoinData[1].title}</h3>
+                <p className="text-slate-300 text-lg">{whyJoinData[1].description}</p>
+            </div>
+            <div className="lg:col-span-3 glass-card rounded-2xl p-8 text-left flex flex-col justify-center scroll-reveal" style={{transitionDelay: '500ms'}}>
+                <h3 className="text-2xl font-bold text-teal-400 mb-4">{whyJoinData[2].title}</h3>
+                <p className="text-slate-300 text-lg">{whyJoinData[2].description}</p>
+            </div>
         </div>
       </div>
     </section>
