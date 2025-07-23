@@ -730,21 +730,23 @@ function Hero({ scrollTo }) {
   return (
     <section className="relative text-white pt-48 pb-24 md:pt-64 md:pb-40">
       <div className="container mx-auto px-6 text-center relative z-10">
-        {/* Animated headlines */}
-        <h1 className="text-5xl md:text-7xl font-extrabold leading-tight tracking-tight">
-          <AnimatedText text="Code the Unimaginable." className="block bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400" />
-          <AnimatedText text="Invent with Intelligence." className="block text-teal-400 title-glow mt-2" delay={0.5} />
-        </h1>
-        {/* Introductory paragraph */}
-        <p className="mt-6 text-lg md:text-xl text-slate-200 max-w-3xl mx-auto animate-fade-in-up" style={{animationDelay: '1s'}}>
-          The Hemas AI-thon is your arena to innovate. We bring the real-world business challenges; you bring the code, the creativity, and the ambition to build what's next. This is more than a competition—it's your entry into the world of applied AI.
-        </p>
-        {/* The new creative call-to-action button */}
-        <div className="mt-12 animate-fade-in-up flex justify-center" style={{animationDelay: '1.2s'}}>
-            <button onClick={(e) => scrollTo(e, 'register')} className="futuristic-cta group">
-                <span className="cta-icon"><PowerIcon /></span>
-                <span className="cta-text">Register Now</span>
-            </button>
+        <div className="max-w-4xl mx-auto">
+            {/* Animated headlines with adjusted responsive font sizes */}
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tight">
+              <AnimatedText text="Code the Unimaginable." className="block bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400" />
+              <AnimatedText text="Invent with Intelligence." className="block text-teal-400 title-glow mt-2" delay={0.5} />
+            </h1>
+            {/* Introductory paragraph */}
+            <p className="mt-6 text-lg md:text-xl text-slate-200 max-w-3xl mx-auto animate-fade-in-up" style={{animationDelay: '1s'}}>
+              The Hemas AI-thon is your arena to innovate. We bring the real-world business challenges; you bring the code, the creativity, and the ambition to build what's next. This is more than a competition—it's your entry into the world of applied AI.
+            </p>
+            {/* The new creative call-to-action button */}
+            <div className="mt-12 animate-fade-in-up flex justify-center" style={{animationDelay: '1.2s'}}>
+                <button onClick={(e) => scrollTo(e, 'register')} className="futuristic-cta group">
+                    <span className="cta-icon"><PowerIcon /></span>
+                    <span className="cta-text">Register Now</span>
+                </button>
+            </div>
         </div>
       </div>
     </section>
