@@ -954,7 +954,7 @@ export default function App() {
   };
 
   // Static data for the registration form and QR code.
-  const registrationFormUrl = "https://www.cognitoforms.com/HemasTransformation1/HemasAIthonOfficialTeamRegistration";
+  const registrationFormUrl = "https://www.cognitoforms.com/HemasTransformation1/AITHON2026OnlineChallengeByHemasHoldingsPLCOfficialTeamRegistration";
   const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(registrationFormUrl)}&bgcolor=111827&color=e2e8f0&qzone=1`;
 
   // Initialize the scroll-reveal hook.
@@ -1096,3 +1096,4 @@ export default function App() {
     </>
   );
 }
+
